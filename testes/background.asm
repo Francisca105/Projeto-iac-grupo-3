@@ -10,10 +10,15 @@ SELECIONA_CENARIO_FUNDO  EQU COMANDOS + 42H		; endereço do comando para selecio
 N_LINHAS        EQU  32        ; número de linhas do ecrã (altura)
 N_COLUNAS       EQU  64        ; número de colunas do ecrã (largura)
 
+LINHA_PNL       EQU 27 ; número da linha onde o painel começa
+COLUNA_PNL_I      EQU 25 ; número da linha onde o painel começa
+COLUNA_PNL_F      EQU 39 ; número da linha onde o painel termina
+
 COR_PIXEL       EQU 0FF00H     ; cor do pixel: vermelho em ARGB (opaco e vermelho no máximo, verde e azul a 0)
 
 
 PLACE 0
+
 inicio:
     MOV  [APAGA_AVISO], R1	; apaga o aviso de nenhum cenário selecionado (o valor de R1 não é relevante)
     MOV  [APAGA_ECRÃ], R1	; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
