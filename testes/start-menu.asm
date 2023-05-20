@@ -16,12 +16,12 @@ TERMINA_MUSICA			 EQU 6066H		  ; comando que faz a música selecionada terminar
 PAUSA_MUSICA			 EQU 605EH		  ; comando que faz a música selecionada pausar
 CONTINUA_MUSICA          EQU 6060H		  ; comando que faz a música selecionda continuar
 
-CENARIO_JOGO EQU 1
-CENARIO_PERDEU EQU 2
-CENARIO_MENU EQU 0
+CENARIO_JOGO EQU 1 ; número do cenário de fundo do jogo
+CENARIO_PERDEU EQU 2 ; número do cenário de fundo de quando se perde
+CENARIO_MENU EQU 0 ; número do cenário de fundo do menu
 
-SOM_TEMA EQU 0
-SOM_START EQU 1
+SOM_TEMA EQU 0 ; número da música de fundo
+SOM_START EQU 1 ; número do som de quando se começa o jogo
 
 
 N_LINHAS        EQU  32        ; número de linhas do ecrã (altura)
@@ -46,7 +46,7 @@ TECLA_START			     EQU 81H          ; tecla C
 
 PLACE       1000H
 
-; SP inicial do "main"
+; SP inicial do programa
 STACK 100H
 SP_inicial:
 
@@ -65,32 +65,6 @@ inicio:
     MOV  [SELECIONA_MUSICA], R0            ; seleciona a música de fundo
     MOV  [COMECAR_MUSICA], R0              ; começa a música de fundo
 
-
-; A IGNORAR E A APAGAR NO FUTURO, ERA SO PARA APARECER O MENU E NAO PASSAR LOGO PARA O "JOGO" 
-DELAY_TIME EQU 32767
-
-WAIT15SECS:
-    MOV R11, DELAY_TIME
-    MOV R10, DELAY_TIME
-    MOV R9, DELAY_TIME
-    MOV R8, DELAY_TIME
-
-DELAY_LOOP:
-    SUB R11, 1
-    JNZ DELAY_LOOP
-
-DELAY_LOOP1:
-    SUB R10, 1
-    JNZ DELAY_LOOP1
-
-DELAY_LOOP2:
-    SUB R9, 1
-    JNZ DELAY_LOOP2
-
-DELAY_LOOP3:
-    SUB R8, 1
-    JNZ DELAY_LOOP3
-; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 menu:
 	;CMP  R0, R1							; verifica se a tecla de start foi pressionada
