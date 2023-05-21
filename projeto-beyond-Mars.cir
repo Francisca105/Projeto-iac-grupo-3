@@ -736,7 +736,11 @@
     "moduleDelay" : 5,
     "positionX" : 206,
     "positionY" : 90,
-    "simGuiVisibleInSimulation" : false,
+    "simGuiVisibleInSimulation" : true,
+    "simGuiXRelative" : 0,
+    "simGuiYRelative" : 0,
+    "simGuiWidth" : 745,
+    "simGuiHeight" : 818,
     "clockPeriod" : 200,
     "startAutomatically" : true,
     "simulationMaster" : true,
@@ -765,7 +769,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "testes/start-menu.asm",
+    "programFilePathName" : "testes/desenhar-sonda.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1509,7 +1513,11 @@
     "moduleDelay" : 5,
     "positionX" : 648,
     "positionY" : 237,
-    "simGuiVisibleInSimulation" : false,
+    "simGuiVisibleInSimulation" : true,
+    "simGuiXRelative" : 721,
+    "simGuiYRelative" : 161,
+    "simGuiWidth" : 819,
+    "simGuiHeight" : 410,
     "columnAddressNBits" : 6,
     "lineAddressNBits" : 5,
     "windowScreenWidthPixels" : 1024,
@@ -1524,6 +1532,12 @@
       "playAsClip" : false
     }, {
       "filePathName" : "media/start.wav",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
+      "filePathName" : "media/laser.wav",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,

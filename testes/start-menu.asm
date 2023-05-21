@@ -16,9 +16,17 @@ TERMINA_MUSICA			 EQU 6066H		  ; comando que faz a música selecionada terminar
 PAUSA_MUSICA			 EQU 605EH		  ; comando que faz a música selecionada pausar
 CONTINUA_MUSICA          EQU 6060H		  ; comando que faz a música selecionda continuar
 
+
+MEMORIA_ECRA	 EQU	8000H	; endereço de base da memória do ecrã
+
+COR_VERMELHO       EQU 0FF00H	; cor do pixel: vermelho em ARGB (opaco e vermelho no máximo, verde e azul a 0)
+COR_PAINEL      EQU AFF00H	; cor do pixel: vermelho em ARGB
+COR_APAGADO     EQU 0000H	; cor para apagar um pixel: todas as componentes a 0
+
 CENARIO_JOGO EQU 1 ; número do cenário de fundo do jogo
 CENARIO_PERDEU EQU 2 ; número do cenário de fundo de quando se perde
 CENARIO_MENU EQU 0 ; número do cenário de fundo do menu
+
 
 SOM_TEMA EQU 0 ; número da música de fundo
 SOM_START EQU 1 ; número do som de quando se começa o jogo
@@ -27,11 +35,11 @@ SOM_START EQU 1 ; número do som de quando se começa o jogo
 N_LINHAS        EQU  32        ; número de linhas do ecrã (altura)
 N_COLUNAS       EQU  64        ; número de colunas do ecrã (largura)
 
+
 LINHA_PNL       EQU 27 ; número da linha onde o painel começa
 COLUNA_PNL_I      EQU 25 ; número da linha onde o painel começa
 COLUNA_PNL_F      EQU 39 ; número da linha onde o painel termina
 
-COR_PIXEL       EQU 0FF00H     ; cor do pixel: vermelho em ARGB (opaco e vermelho no máximo, verde e azul a 0)
 
 DISPLAYS   EQU 0A000H  ; endereço dos displays de 7 segmentos (periférico POUT-1)
 TEC_LIN    EQU 0C000H  ; endereço das linhas do teclado (periférico POUT-2)
@@ -40,7 +48,9 @@ LINHA      EQU 1       ; linha a testar (1ª linha, 0001b)
 MASCARA    EQU 0FH     ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 LIN_FIN    EQU 8       ; linha final
 
+
 TECLA_START			     EQU 81H          ; tecla C
+
 
 ; DADOS
 
@@ -49,6 +59,11 @@ PLACE       1000H
 ; SP inicial do programa
 STACK 100H
 SP_inicial:
+
+; SP inicial do painel
+STACK 100H
+SP_inicial_painel:
+
 
 ; CODIGO
 PLACE 0
@@ -84,6 +99,9 @@ start:
     MOV R0, SOM_START                    ; endereço da música de start
     MOV  [SELECIONA_MUSICA], R0            ; seleciona a música de start
     MOV [REPRODUZ_SOM], R0                 ; reproduz o som de start
+
+PROCESS SP_inicial_painel
+;
 
 fim:
     JMP  fim                 ; termina programa
