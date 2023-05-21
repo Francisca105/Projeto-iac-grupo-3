@@ -290,8 +290,10 @@ sai_tecl:
 ;******************************************
 
 display:
-	PUSH R1
-    MOV  R1, DISPLAYS  				; endereço do periférico dos displays
-	MOV  [R1], R0       			; escreve a vida atual nos displays
-	POP	 R1
-	RET
+    PUSH    R0
+	PUSH    R1
+    MOV     R1, DISPLAYS  				; endereço do periférico dos displays
+	MOV     [R1], R0       			; escreve a vida atual nos displays
+	POP	    R1
+    POP     R0
+    RET
