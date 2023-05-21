@@ -6,7 +6,7 @@
 
 ###### A fazer:
 
-* ~~O teclado deve estar completamente funcional, detetando todas as teclas;~~
+* O teclado deve estar completamente funcional, detetando todas as teclas;
 * Deve desenhar o painel de instrumentos da nave;
 * ~~Deve ter um cenário de fundo;~~
 * Deve desenhar um asteroide (minerável ou não), no topo esquerdo do ecrã. Esse asteroide deve descer na diagonal uma linha no ecrã sempre que se carrega numa tecla (escolha qual), mas apenas uma linha por cada clique na tecla. Não tem de detetar a eventual colisão com a nave;
@@ -20,13 +20,12 @@
 
     Sons:
 
-- Menu inicial
+- ~~Menu inicial + start~~
 - Menu pausa
 - Continuar jogo
 - Lazer
 - Explosão
 - Fim de jogo
-
 
 Fundos:
 
@@ -34,7 +33,6 @@ Fundos:
 * Pausa (? - tentar colocar só o texto à frente do jogo pausado)
 * ~~Perdeu~~
 * ~~Menu inicial~~
-
 
 ---
 
