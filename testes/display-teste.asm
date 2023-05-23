@@ -170,13 +170,12 @@ start:
 
     MOV     R0, ENERGIA_INICIAL             ; energia inicial do jogador
     MOV     [ENERGIA], R0                   ; definir a energia do jogador
-    CALL display
-    
-    ;CALL    main                            ; ciclo principal do jogo
+    ;CALL display
 
-;main:
-    ;CALL    display                         ; mostra a energia do jogador
-    ;CALL    main                            ; ciclo principal do jogo
+main:
+    MOV     R0, [ENERGIA]                   ; energia do jogador
+    CALL    display                         ; atualiza o ecrã
+
 
 fim:
     JMP     fim                             ; termina o programa
@@ -273,12 +272,132 @@ sai_tecl:
 
 ;******************************************
 ; Descrição: Converte o valor de R3 para decimal de forma a conseguir escrever no display.
-; Entradas:  R3 - Nível de energia atual
+; Entradas:  R0 - Nível de energia atual
+; Saídas:    -------------------
+;******************************************
+converte_hex:
+	PUSH R1
+	PUSH R2
+	PUSH R3
+	PUSH R4
+	PUSH R5
+	PUSH R6 
+	PUSH R7
+	MOV R6, 0 ; Inicializa o valor acumulado em R6
+	MOV R5, 10H ; Valor decimal 16 em R5
+	MOV R4, 0AH ; Inicializa o valor acumulado em R6
+
+	MOV R7, 16H ; Define a base para a conversão (16, hexadecimal)
+	JMP converte_loop
+
+letra_detetada:
+	MOV R7, 1 ; Sinaliza que uma letra foi detectada
+	JMP retirar_letras_loop_2
+
+converte_loop:
+	MOV R3, R0 ; Copia o valor de R0 para R3
+
+	MOD R3, R5 ; Calcula o resto da divisão de R3 por R5 (16) - último dígito
+	DIV R0, R5 ; Calcula o quociente da divisão de R0 por R5 (16) - resto dos dígitos
+
+	MOV R1, R3 ; Copia o resto da divisão para R1 (último dígito)
+	MOD R1, R4 ; Calcula o resto da divisão de R1 por R4 (10)
+	DIV R3, R4 ; Calcula o quociente da divisão de R3 por R4 (10)
+
+
+	MUL R3, R5 ; Multiplica o quociente por R5 (16)
+
+
+	ADD R6, R1 ; Adiciona ambas as partes ao output
+	ADD R6, R3
+
+	CMP R0, 0 ; Verifica se o valor convertido chegou a 0
+	JZ retirar_letras
+
+converte_segunda_passagem:
+	MOV R1, 2 
+	MOV R2, 5 
+
+	MOV R3, R0 
+	DIV R3, R1 ; Divide o valor de R3 por R1 (2)
+	ADD R3, R0 ; Adiciona o valor de R0 ao quociente da divisão
+	MUL R3, R5 ; Multiplica o valor de R3 por R5 (16)
+	ADD R3, R0 
+	MOD R0, R1 ; Calcula o resto da divisão de R0 por R1 (2)
+	MUL R0, R2 ; Multiplica o resto da divisão por R2 (5)
+	ADD R3, R0 
+
+	ADD R6, R3 ; Adiciona o valor acumulado em R3 ao valor acumulado em R6
+
+retirar_letras:
+	MOV R0, R6 ; Move o valor acumulado em R6 para R0
+	MOV R6, 0 ; Reinicia o valor do novo output
+	MOV R2, 1 
+	MOV R7, 0 ; Sinaliza que nenhuma letra foi detectada
+
+retirar_letras_loop:
+	MOV R3, R0
+
+	MOD R3, R5 ; Calcula o resto da divisão de R3 por R5 (16) - último dígito
+	DIV R0, R5 ; Calcula o quociente da divisão de R0 por R5 (16) - resto dos dígitos
+
+	MOV R1, R3
+	MOD R1, R4 ; Último dígito em decimal
+	DIV R3, R4 ; Primeiro dígito em decimal
+
+
+	MUL R3, R5
+
+	CMP R3, 0
+	JNZ letra_detetada ; Se alguma letra foi detectada, repete o processo
+
+retirar_letras_loop_2:
+	MUL R3, R2 ; Multiplica por 1
+	MUL R1, R2 
+
+	ADD R6, R1 ; Adiciona ao output
+	ADD R6, R3
+
+	MUL R2, R5 
+	CMP R0, 0  ; Verifica se o valor convertido chegou a 0
+	JNZ retirar_letras_loop ; Se não chegou a 0, repete o processo
+
+converte_saida:
+	MOV R0, R6 ; Move o valor acumulado em R6 para o do output
+	CMP R7, 0 ; Verifica se alguma letra foi detectada
+	JNZ retirar_letras  ; Se alguma letra foi detectada, repete o processo
+	POP R7
+	POP R6
+	POP R5
+	POP R4
+	POP R3
+	POP R2
+	POP R1
+	RET
+
+;******************************************
+; Descrição: Altera o nível de energia.
+; Entradas:  R0 - Nível de energia atual
+;            R3 - Nível de energia a adicionar
 ; Saídas:    -------------------
 ;******************************************
 
+add_energia:
+    ADD R0, R3 ; adiciona o valor da energia atual ao valor a adicionar
+    MOV R3, 0 ; reinicia o valor a adicionar
+    CMP R3, R0 ; verifica se o valor da energia atual é menor ou igual a 0
+    JGE energia_zero ; se for, vai para energia_zero
 
+    JMP energia_fim
 
+energia_zero:
+    MOV R0, 0
+    JMP energia_fim
+
+energia_fim:
+    CALL display
+    RET
+	
 ;******************************************
 ; Descrição: Coloca o nível de energia no display.
 ; Entradas:  R0 - Nível de energia
@@ -290,6 +409,7 @@ display:
 	PUSH    R1
     MOV     R1, DISPLAYS  				; endereço do periférico dos displays
     MOV     R0, [ENERGIA]  				; lê a energia atual
+    CALL    converte_hex   				; converte para decimal
 	MOV     [R1], R0       			; escreve a vida atual nos displays
 	POP	    R1
     POP     R0
