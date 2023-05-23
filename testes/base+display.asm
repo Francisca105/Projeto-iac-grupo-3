@@ -1,14 +1,15 @@
 ; ****************************************************************************
-; * Projeto primeira entrega
-; * ist1105901 - Francisca Almeida
-; * ist1106827 - Cecília Correia
-; * ist1106943 - José Frazão
-
-; * Descrição: Simula o jogo dos asteróides num computador de 16 bits.
+; * Projeto primeira entrega                                                 *                   
+; * ist1105901 - Francisca Almeida                                           *
+; * ist1106827 - Cecília Correia                                             *
+; * ist1106943 - José Frazão                                                 *
+; *                                                                          *
+; * Descrição: Simula o jogo dos asteróides num computador de 16 bits.       *
 ; ****************************************************************************
 
 ; ****************************************************************************
-; * Constantes
+; * Constantes                                                               *
+; ****************************************************************************
 
 ; ENDEREÇOS
 COMANDOS				    EQU	6000H   ; endereço de base dos comandos do MediaCenter
@@ -93,42 +94,43 @@ CENARIO_MENU        EQU 0   ; número do cenário do fundo do menu
 SOM_TEMA            EQU 0   ; número da música de fundo
 SOM_START           EQU 1   ; número do som quando se começa o jogo
 
+; CORES (ARGB)
+COR_VERMELHO       EQU 0FF00H  ; cor vermelha 
+
 ; ECRA
 N_LINHAS        EQU  32     ; número de linhas do ecrã (altura)
 N_COLUNAS       EQU  64     ; número de colunas do ecrã (largura)
-
-; TECLADO
-LIN_INI         EQU 1       ; primeira linha a testar (1ª linha, 0001b)
-LIN_FIN         EQU 8       ; última linha (4ª linha, 1000b)
-MASC_TEC        EQU 0FH     ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 
 ; PAINEL
 LINHA_PNL       EQU 27      ; número da linha onde o painel começa
 COLUNA_PNL_I    EQU 25      ; número da linha onde o painel começa
 COLUNA_PNL_F    EQU 39      ; número da linha onde o painel termina
 
-TECLA_START     EQU 0CH     ; tecla C
+; TECLADO
+LIN_INI         EQU 1       ; primeira linha a testar (1ª linha, 0001b)
+LIN_FIN         EQU 8       ; última linha (4ª linha, 1000b)
+MASC_TEC        EQU 0FH     ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 
-COR_PIXEL       EQU 0FF00H  ; cor do pixel: vermelho em ARGB (opaco e vermelho no máximo, verde e azul a 0)
+
 
 ; JOGO
+
+TECLA_START     EQU 0CH     ; tecla C
 
 ENERGIA_INICIAL EQU 64H     ; energia inicial do jogador
 
 ; ****************************************************************************
-
+; * STACK POINTER                                                            *
 ; ****************************************************************************
-; STACK POINTER
 PLACE       1000H
 ; SP inicial do programa
 STACK       100H
 SP_inicial:
 ENERGIA:     WORD    0       ; energia do jogador
 ; ****************************************************************************
+; * CODIGO                                                                   *
+; ****************************************************************************
 
-; **********
-; * CODIGO *
-; **********
 PLACE       0
 
 inicio:
@@ -170,26 +172,31 @@ start:
 
     MOV     R0, ENERGIA_INICIAL             ; energia inicial do jogador
     MOV     [ENERGIA], R0                   ; definir a energia do jogador
-    ;CALL display
 
 main:
+    YIELD
     MOV     R0, [ENERGIA]                   ; energia do jogador
     CALL    display                         ; atualiza o ecrã
+    ;CALL    main ########################## AO VOLTAR AO CICLO DÁ ERRO IDK WHY :/
+    
+
 
 
 fim:
     JMP     fim                             ; termina o programa
 
 
-;**********
-; ROTINAS *
-;**********
+; ****************************************************************************
+; * ROTINAS                                                                  *
+; ****************************************************************************
 
-;******************************************
-; Descrição: Lê a tecla do teclado premida.
-; Entradas:  -------------------
-; Saídas:    R3 - Valor da tecla
-;******************************************
+
+; ****************************************************************************
+; * Descrição: Lê a tecla do teclado premida.                                *
+; * Entradas:  -------------------                                           *
+; * Saídas:    R3 - Valor da tecla                                           *
+; ****************************************************************************
+
 teclado:
     PUSH    R0
     PUSH    R1
@@ -270,11 +277,12 @@ sai_tecl:
     POP     R0
     RET
 
-;******************************************
-; Descrição: Converte o valor de R3 para decimal de forma a conseguir escrever no display.
-; Entradas:  R0 - Nível de energia atual
-; Saídas:    -------------------
-;******************************************
+; ****************************************************************************
+; * Descrição: Converte um valor para decimal                                *
+; * Entradas:  R0 - Nível de energia atual                                   *
+; * Saídas:    -------------------                                           *
+; ****************************************************************************
+
 converte_hex:
 	PUSH R1
 	PUSH R2
@@ -375,18 +383,18 @@ converte_saida:
 	POP R1
 	RET
 
-;******************************************
-; Descrição: Altera o nível de energia.
-; Entradas:  R0 - Nível de energia atual
-;            R3 - Nível de energia a adicionar
-; Saídas:    -------------------
-;******************************************
+; ****************************************************************************
+; * Descrição: Altera o nível de energia.                                    *
+; * Entradas:  R0 - Nível de energia atual                                   *
+; *            R3 - Nível de energia a adicionar                             *
+; * Saídas:    -------------------                                           *            
+; ****************************************************************************
 
 add_energia:
     ADD R0, R3 ; adiciona o valor da energia atual ao valor a adicionar
     MOV R3, 0 ; reinicia o valor a adicionar
     CMP R3, R0 ; verifica se o valor da energia atual é menor ou igual a 0
-    JGE energia_zero ; se for, vai para energia_zero
+    JGE energia_zero
 
     JMP energia_fim
 
@@ -398,11 +406,11 @@ energia_fim:
     CALL display
     RET
 	
-;******************************************
-; Descrição: Coloca o nível de energia no display.
-; Entradas:  R0 - Nível de energia
-; Saídas:    -------------------
-;******************************************
+; ****************************************************************************
+; * Descrição: Coloca o nível de energia no display.                         *   
+; * Entradas:  R0 - Nível de energia                                         *
+; * Saídas:    -------------------                                           *
+; ****************************************************************************
 
 display:
     PUSH    R0
