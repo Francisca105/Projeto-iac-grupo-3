@@ -11,9 +11,9 @@
   "primary screen height" : 960,
   "window" : {
     "X absolute" : -7,
-    "Y absolute" : -7,
+    "Y absolute" : 0,
     "X relative" : -7,
-    "Y relative" : -7,
+    "Y relative" : 0,
     "width" : 1550,
     "height" : 926,
     "leftRightDividerLocation" : 237,
@@ -769,7 +769,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "testes/painelSF+Conversão copy.asm",
+    "programFilePathName" : "testes/sonda.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
