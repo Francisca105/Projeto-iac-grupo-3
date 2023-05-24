@@ -277,6 +277,10 @@ start:
     MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona a música de fundo
     MOV     [TERMINA_SOM_OU_VIDEO], R1      ; termina a música de fundo
 
+    MOV     R1, SOM_GAMEOVER                ; endereço do som de game over
+    MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona o som de fim de jogo
+    MOV     [TERMINA_SOM_OU_VIDEO], R1      ; termina o som
+
     MOV     R1, SOM_START                   ; endereço da música de start
     MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona a música de start
     MOV     [INICIA_REPRODUCAO], R1         ; reproduz o som de start

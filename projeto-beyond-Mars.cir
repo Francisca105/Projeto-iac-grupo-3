@@ -740,7 +740,7 @@
     "simGuiXRelative" : 48,
     "simGuiYRelative" : 33,
     "simGuiWidth" : 745,
-    "simGuiHeight" : 818,
+    "simGuiHeight" : 864,
     "clockPeriod" : 200,
     "startAutomatically" : true,
     "simulationMaster" : true,
@@ -769,7 +769,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "testes/display-teste.asm",
+    "programFilePathName" : "testes/painelSF+Conversão copy.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1451,8 +1451,8 @@
     "positionX" : 782,
     "positionY" : 486,
     "simGuiVisibleInSimulation" : true,
-    "simGuiXRelative" : 827,
-    "simGuiYRelative" : 482,
+    "simGuiXRelative" : 856,
+    "simGuiYRelative" : 459,
     "simGuiWidth" : 140,
     "simGuiHeight" : 159,
     "columns" : 4,
@@ -1522,8 +1522,8 @@
     "positionX" : 648,
     "positionY" : 237,
     "simGuiVisibleInSimulation" : true,
-    "simGuiXRelative" : 650,
-    "simGuiYRelative" : 104,
+    "simGuiXRelative" : 714,
+    "simGuiYRelative" : 50,
     "simGuiWidth" : 819,
     "simGuiHeight" : 410,
     "columnAddressNBits" : 6,
@@ -1531,7 +1531,7 @@
     "windowScreenWidthPixels" : 1024,
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 65280,
-    "image paths" : [ "media/start.png", "media/espaço.jpg", "media/perdeu.jpg" ],
+    "image paths" : [ "media/start.png", "media/espaço.jpg", "media/terminado.png", "media/energia.png" ],
     "sounds/videos settings" : [ {
       "filePathName" : "media/tema.wav",
       "relative sound volume" : 1.0,
@@ -1546,6 +1546,12 @@
       "playAsClip" : false
     }, {
       "filePathName" : "media/laser.wav",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
+      "filePathName" : "media/gameover.wav",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
