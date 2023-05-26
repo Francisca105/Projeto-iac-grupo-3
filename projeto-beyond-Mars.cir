@@ -11,9 +11,9 @@
   "primary screen height" : 960,
   "window" : {
     "X absolute" : -7,
-    "Y absolute" : 0,
+    "Y absolute" : -7,
     "X relative" : -7,
-    "Y relative" : 0,
+    "Y relative" : -7,
     "width" : 1550,
     "height" : 926,
     "leftRightDividerLocation" : 237,
@@ -740,7 +740,7 @@
     "simGuiXRelative" : 48,
     "simGuiYRelative" : 33,
     "simGuiWidth" : 745,
-    "simGuiHeight" : 864,
+    "simGuiHeight" : 818,
     "clockPeriod" : 200,
     "startAutomatically" : true,
     "simulationMaster" : true,
@@ -769,7 +769,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "testes/sonda.asm",
+    "programFilePathName" : "testes/faltaSomAsteroide.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",

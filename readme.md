@@ -6,9 +6,9 @@
 
 ###### A corrigir:
 
-* Sonda não apaga
+* Sonda e asteroide não apagam
 * Conversor hexadecimal (?)
-* 
+* Som
 
 ---
 
