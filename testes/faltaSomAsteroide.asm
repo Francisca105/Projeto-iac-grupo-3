@@ -278,8 +278,8 @@ diminui_energia:
     CALL    premida                         ; espera que a tecla deixe de ser premida
     CALL    energia                         ; verifica a energia atual da nave
     CMP     R1, 0                           ; a energia está a 0 ou abaixo disso?
-    JGT      espera_tecla                   ; se não, lê o teclado
-    CALL    game_over                       ; termina o jogo
+    JGT     espera_tecla                    ; se não, lê o teclado
+    CALL    game_over_energia               ; termina o jogo
     JMP     start
 
 dispara_sonda:
@@ -855,6 +855,13 @@ energia:
 ; Entradas:  ---------------
 ; Saídas:    ---------------
 ;****************************
+
+game_over_energia:
+    MOV    R0, CENARIO_SEM_ENERGIA          ; cenário de fundo com a mensagem de sem energia
+    MOV    [DEFINE_CENARIO], R0             ; seleciona o cenário
+
+    CALL   game_over                        ; termina o jogo
+
 game_over:
     PUSH    R0
     PUSH    R3
