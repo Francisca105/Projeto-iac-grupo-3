@@ -1,18 +1,29 @@
 # Projeto
 
-#### Entrega intermédia
+#### Entrega final
 
 ---
 
-###### A corrigir:
+##### A fazer:
 
-* Sonda e asteroide não apagam
-* Conversor hexadecimal (?)
-* Som
+- Sondas diagonais
+- Sondas a mexer com interrupções
+- Asteroides mineráveis
+- Asteroides com diferentes movimentos
+- Asteroide a mexer com interrupções
+- Gerador de asteroides
+- Colisões
+- 
 
 ---
 
-**Extras**:
+##### A corrigir:
+
+* Conversor hexadecimal
+
+---
+
+###### **Extras**:
 
 Sons:
 
@@ -32,7 +43,7 @@ Fundos:
 
 ---
 
-**Notas sobre os labs:**
+###### **Notas sobre os labs:**
 
 * Lab 3 - funcionamento do teclado + displays
 * Lab 4 - mediacenter
