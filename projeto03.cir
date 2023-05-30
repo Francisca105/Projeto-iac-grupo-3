@@ -769,7 +769,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "grupo03.asm",
+    "programFilePathName" : "testes/nave.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1571,7 +1571,7 @@
       "nWordParts" : 2,
       "endianness" : "Big-Endian",
       "addressNBits" : 12,
-      "numberOfPixelScreens" : 3
+      "numberOfPixelScreens" : 16
     },
     "addressable control" : {
       "className" : "ModuleExtensionMediaCenter",

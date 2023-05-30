@@ -13,7 +13,8 @@
 - Asteroide a mexer com interrupções
 - Gerador de asteroides
 - Colisões
-- 
+- Interrupção para baixar a energia
+- Não meter energia abaixo de 0
 
 ---
 
