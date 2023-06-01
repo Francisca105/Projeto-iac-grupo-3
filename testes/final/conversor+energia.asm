@@ -358,7 +358,7 @@ diminui_energia:
     CMP     R3, R1                          ; a tecla lida é o "2"?
     JNZ     dispara_sonda                   ; se não, verifica a próxima
 
-    MOV     R2, -2                           ; incrementa a energia em uma unidade
+    MOV     R2, -101                           ; incrementa a energia em uma unidade
     CALL    altera_energia_r                ; incrementa a energia em uma unidade
 
     CALL    premida                         ; espera que a tecla deixe de ser premida
@@ -408,13 +408,25 @@ altera_energia_r:
     MOV     R0, ENERGIA                     ; endereço da energia atual do display 
     MOV     R1, [R0]                        ; energia atual do display
     ADD     R1, R2                          ; acrescenta o valor pretendido à energia atual
+    CMP     R1, 0                           ; a energia atual é menor que 0?
+    JLT     energia_0                       ; se sim, atualiza a energia para 0 e termina o jogo
     MOV     [R0], R1                        ; atualiza a variável que guarda a energia
     CALL    display                         ; atualiza o display
 
+sai_altera_energia:
     POP     R2
     POP     R1
     POP     R0
     RET
+
+energia_0:
+    MOV     R0, ENERGIA                     ; endereço da energia atual do display 
+    MOV    R2, 0                            ; energia atual é 0
+    MOV    [R0], R2                          ; atualiza a energia
+    CALL    display                         ; atualiza o display
+
+    CALL   game_over_energia                ; termina o jogo
+    JMP    sai_altera_energia               ; sai da rotina
 
 
 ; ****************************************************************************
