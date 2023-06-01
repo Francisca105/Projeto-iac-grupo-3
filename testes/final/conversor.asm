@@ -1,5 +1,5 @@
 ; ****************************************************************************
-; * IST-UL, ASA, 2019/2020                                                   *
+; * IST-UL, IAC, 2022/2023                                                   *
 ; * Projeto Beyond Mars - Versão intermédia - 26/05/2023                     *
 ; *                                                                          *
 ; * Realizado por:                                                           *
@@ -523,13 +523,49 @@ display:
     MOV     R0, [R0]				        ; energia atual do display
 	MOV     R3, R0						    ; guarda temporariamente o valor da energia 
 
-	;CALL    converte_hex			        ; converte o valor da energia de Hexadecimal para decimal 
-	MOV     [R4], R3       			        ; escreve a energia atual nos displays
+	CALL    converte_hex			        ; converte o valor da energia de Hexadecimal para decimal 
+	MOV     [R4], R2       			        ; escreve a energia atual nos displays
 	MOV     R3, R0						    ; R3 volta a receber o valor da energia em Hexadecimal
 
 	POP	    R4
 	POP     R0
 	RET
+
+
+
+; ***********************************************************************
+; CONVERTE_HEX
+; Descrição: Converte um número decimal para o mesmo número hexadecimal.
+; Entradas:  R0 - Número a converter
+; Saídas:    R2 - Número convertido em hexadecimal
+; ***********************************************************************
+converte_hex:    
+    PUSH    R0
+    PUSH    R1
+    PUSH    R3
+
+    MOV     R1, 1000                        ; fator
+    MOV     R2, 0                           ; resultado (inicialmente a 0)
+ciclo_converte_hex:
+    MOD     R0, R1                          ; resto da divisão inteira do número pelo fator
+    MOV     R3, 10
+    DIV     R1, R3                          ; prepara o próximo fator de divisão
+    CMP     R1, R3                          ; cse o fator já é menor que 10, já está concluído
+    JLT     exit_converte_hex               ; termina a rotina
+    MOV     R3, R0
+    DIV     R3, R1                          ; dígito de valor decimal
+    SHL     R2, 4                           ; desloca, para dar espaço ao novo dígito
+    OR      R2, R3                          ; vai compondo o resultado
+    JMP     ciclo_converte_hex              ; repete o processo
+
+exit_converte_hex:
+    SHL     R2, 4                           ; desloca, para dar espaço ao último dígito
+    OR      R2, R0                          ; resultado final
+
+    POP     R3
+    POP     R1
+    POP     R0
+    RET
 
 ; ****************************************************************************
 ; AUMENTA_ENERGIA
@@ -940,38 +976,3 @@ game_over_ciclo:
 rot_int_0:
     CALL     muda_painel                    ; muda o painel
     RFE                                     ; retorna da interrupção
-
-
-; ***********************************************************************
-; CONVERTE_HEX
-; Descrição: Converte um número decimal para o mesmo número hexadecimal.
-; Entradas:  R0 - Número a converter
-; Saídas:    R2 - Número convertido em hexadecimal
-; ***********************************************************************
-converte_hex:    
-    PUSH    R0
-    PUSH    R1
-    PUSH    R3
-
-    MOV     R1, 1000                        ; fator
-    MOV     R2, 0                           ; resultado (inicialmente a 0)
-ciclo_converte_hex:
-    MOD     R0, R1                          ; resto da divisão inteira do número pelo fator
-    MOV     R3, 10
-    DIV     R1, R3                          ; prepara o próximo fator de divisão
-    CMP     R1, R3                          ; cse o fator já é menor que 10, já está concluído
-    JLT     exit_converte_hex               ; termina a rotina
-    MOV     R3, R0
-    DIV     R3, R1                          ; dígito de valor decimal
-    SHL     R2, 4                           ; desloca, para dar espaço ao novo dígito
-    OR      R2, R3                          ; vai compondo o resultado
-    JMP     ciclo_converte_hex              ; repete o processo
-
-exit_converte_hex:
-    SHL     R2, 4                           ; desloca, para dar espaço ao último dígito
-    OR      R2, R0                          ; resultado final
-
-    POP     R3
-    POP     R1
-    POP     R0
-    RET
