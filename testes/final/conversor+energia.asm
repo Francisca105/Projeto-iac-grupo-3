@@ -358,15 +358,11 @@ diminui_energia:
     CMP     R3, R1                          ; a tecla lida é o "2"?
     JNZ     dispara_sonda                   ; se não, verifica a próxima
 
-    MOV     R2, -101                           ; incrementa a energia em uma unidade
+    MOV     R2, -95                           ; incrementa a energia em uma unidade
     CALL    altera_energia_r                ; incrementa a energia em uma unidade
 
     CALL    premida                         ; espera que a tecla deixe de ser premida
-    CALL    energia                         ; verifica a energia atual da nave
-    CMP     R1, 0                           ; a energia está a 0 ou abaixo disso?
-    JGT     espera_tecla                    ; se não, lê o teclado
-    CALL    game_over_energia               ; termina o jogo
-    JMP     start
+
 
 dispara_sonda:
     MOV     R1, TECLA_F                     ; tecla para mover a sonda
@@ -408,25 +404,27 @@ altera_energia_r:
     MOV     R0, ENERGIA                     ; endereço da energia atual do display 
     MOV     R1, [R0]                        ; energia atual do display
     ADD     R1, R2                          ; acrescenta o valor pretendido à energia atual
-    CMP     R1, 0                           ; a energia atual é menor que 0?
-    JLT     energia_0                       ; se sim, atualiza a energia para 0 e termina o jogo
+
+    CMP     R1, 0                           ; a energia atual é menor que zero?
+    JLE      energia_zero                    ; se sim, atualiza a energia para zero
+
     MOV     [R0], R1                        ; atualiza a variável que guarda a energia
     CALL    display                         ; atualiza o display
 
-sai_altera_energia:
     POP     R2
     POP     R1
     POP     R0
     RET
 
-energia_0:
-    MOV     R0, ENERGIA                     ; endereço da energia atual do display 
-    MOV    R2, 0                            ; energia atual é 0
-    MOV    [R0], R2                          ; atualiza a energia
+energia_zero:
+    MOV     R1, 0                           ; energia atual é zero
+    MOV     [R0], R1                        ; atualiza a variável que guarda a energia
     CALL    display                         ; atualiza o display
 
-    CALL   game_over_energia                ; termina o jogo
-    JMP    sai_altera_energia               ; sai da rotina
+    POP     R2
+    POP     R1
+    POP     R0
+    JMP     game_over_energia               ; termina o jogo
 
 
 ; ****************************************************************************
@@ -952,9 +950,10 @@ game_over_ciclo:
     CMP     R3, R0                          ; a tecla lida é o "C"?
     JNZ     game_over_ciclo                 ; se não, continua à espera
     
+game_over_restart:
     POP     R3
     POP     R0
-    RET
+    JMP     start                           ; reinicia o jogo
 
 
 
