@@ -15,14 +15,17 @@
 - Colisões
 - Interrupção para baixar a energia
 - Não meter energia abaixo de 0
+- Pausa
 
 ---
 
 ##### A corrigir:
 
-* Conversor hexadecimal
+* ~~Conversor hexadecimal~~
 
 ---
+
+#### **Outros:**
 
 ###### **Extras**:
 
@@ -38,7 +41,7 @@ Sons:
 Fundos:
 
 * ~~Durante jogo~~
-* Pausa (? - tentar colocar só o texto à frente do jogo pausado)
+* ~~Pausa~~ (tentar colocar só o texto à frente do jogo pausado)
 * ~~Perdeu~~
 * ~~Menu inicial~~
 
