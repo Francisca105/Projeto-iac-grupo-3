@@ -1,5 +1,5 @@
 ; ****************************************************************************
-; * IST-UL, ASA, 2019/2020                                                   *
+; * IST-UL, IAC                                                              *
 ; * Projeto Beyond Mars - Versão intermédia - 26/05/2023                     *
 ; *                                                                          *
 ; * Realizado por:                                                           *
