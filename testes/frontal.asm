@@ -29,6 +29,7 @@ inicio:
     MOV     [DEFINE_CENARIO], R0            ; seleciona o cenário de fundo
 
 
-    MOV R0, MEMORIA
-    ADD R0, 2
-    MOV [FRONTAL], R0
+    MOV     R0, 4				; cenário frontal
+    MOV     [FRONTAL], R0
+
+end: JMP end
