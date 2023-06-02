@@ -6,7 +6,7 @@ APAGA_ECRA                  EQU COMANDOS    ; comando que apaga todos os pixéis
 APAGA_ECRAS                 EQU 6002H       ; comando que apaga todos os pixéis de todos os ecrãs
 SELECIONA_ECRA              EQU 6004H       ; comando que seleciona o ecrã a ser utilizado
 MOSTRA_ECRA                 EQU 6006H       ; comando que mostra o ecrã especificado
-APAGA_CENARIO_FRONTAL       EQU 0044H       ; comando que apaga o cenário frontal
+APAGA_CENARIO_FRONTAL       EQU 6044H       ; comando que apaga o cenário frontal
 SELECIONA_CENARIO_FRONTAL   EQU 0046H       ; comando que seleciona o cenário frontal
 ESCONDE_ECRA                EQU 6008H       ; comando que esconde o ecrã especificado
 DEFINE_LINHA                EQU 600AH       ; comando que define a linha
@@ -31,5 +31,7 @@ inicio:
 
     MOV     R0, 4				; cenário frontal
     MOV     [FRONTAL], R0
+
+    MOV     [APAGA_CENARIO_FRONTAL], R0
 
 end: JMP end
