@@ -298,6 +298,8 @@ SP_teclado:				                    ; valor inicial para o SP do processo teclado
 STACK       100H
 SP_nave:
 
+STACK       100H
+SP_controlos:
 
 
 
@@ -371,12 +373,119 @@ start:
 
     CALL    energia
     CALL    muda_painel
+    CALL    controlos
 
 main:
     YIELD
-    ;MOV     R0, [TECLA_CARREGADA]
+    
 
     JMP     main
+
+PROCESS SP_controlos
+
+controlos:
+    MOV     R0, [TECLA_CARREGADA]
+
+    MOV     R1, TECLA_TERMINAR
+    CMP     R0, R1
+    JZ     game_over_terminado
+
+    MOV     R1, TECLA_PAUSAR
+    CMP     R0, R1
+    JZ      pausa
+
+    JMP     controlos
+
+pausa:
+    MOV     R8, PAUSA
+    MOV     R9, [R8]
+
+    CMP     R9, 1
+    JNZ     mete_pausa
+    JMP     tira_pausa
+
+tira_pausa:
+    MOV     [APAGA_FRONTAL], R11            ; apaga o painel de pausa
+
+    MOV     R11, SOM_TEMA_PAUSA             ; endereço da música de fundo
+    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona a música de fundo
+    MOV     [TERMINA_SOM_OU_VIDEO], R11     ; começa a música de fundo
+
+    MOV     R11, 0
+    MOV     [R8], R11
+
+    JMP     controlos
+
+mete_pausa:
+    MOV     R11, CENARIO_PAUSA
+    MOV     [DEFINE_FRONTAL], R11
+
+    MOV     R11, SOM_TEMA_PAUSA             ; endereço da música de fundo
+    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona a música de fundo
+    MOV     [REPRODUZ_EM_CICLO], R11        ; começa a música de fundo
+
+    MOV     R11, 1
+    MOV     [R8], R11
+
+    JMP     espera_pausa
+
+espera_pausa:
+    MOV     R0, [TECLA_CARREGADA]
+
+    MOV     R1, TECLA_PAUSAR
+    CMP     R0, R1
+    JZ      pausa
+
+    JMP     espera_pausa
+    
+
+
+; ****************************************************************************
+; GAME_OVER
+; Descrição: Termina o jogo.
+; Entradas:  ---------------
+; Saídas:    ---------------
+; ****************************************************************************
+
+game_over_terminado:
+    MOV     R1, CENARIO_TERMINADO           ; cenário de fundo com a mensagem de fim de jogo
+    MOV     [DEFINE_CENARIO], R1            ; seleciona o cenário
+
+    CALL    game_over                       ; termina o jogo
+
+game_over_energia:
+    MOV    R0, CENARIO_SEM_ENERGIA          ; cenário de fundo com a mensagem de sem energia
+    MOV    [DEFINE_CENARIO], R0             ; seleciona o cenário
+
+    CALL   game_over                        ; termina o jogo
+
+game_over:
+    PUSH    R0
+    PUSH    R3
+
+    MOV     R8, PAUSA
+    MOV     R11, 1
+    MOV     [R8], R11                       ; pausa o jogo
+
+    ;MOV     R0, SONDA                       ; endereço da tabela relativa à sonda
+    ;ADD     R0, 2                           ; endereço da variável que guarda o nº de movimentos realizados
+    ;CALL    reinicia_sonda                  ; reinicia a sonda
+    ;CALL    reinicia_asteroide              ; reinicia o asteróide
+    MOV     [APAGA_ECRAS], R0	            ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+
+    MOV     R0, SOM_GAMEOVER                ; endereço do som de game over
+    MOV     [DEFINE_SOM_OU_VIDEO], R0       ; seleciona o som de fim de jogo
+    MOV     [INICIA_REPRODUCAO], R0         ; reproduz o som
+
+game_over_ciclo:
+    MOV     R3, [TECLA_CARREGADA]
+    MOV     R0, TECLA_START
+    CMP     R3, R0                          ; a tecla lida é o "C"?
+    JNZ     game_over_ciclo                 ; se não, continua à espera
+    
+    POP     R3
+    POP     R0
+    CALL    start                           ; reinicia o jogo
 
 ; ****************************************************************************
 
@@ -433,11 +542,6 @@ coluna:                                     ; loop para converter a coluna
 exit_coluna:
     ADD     R4, R8                          ; tecla = 4*linha + coluna
     MOV		[TECLA_CARREGADA], R4			; notifica outros processos do valor da coluna detetada
-    MOV     R7, TECLA_PAUSAR
-    MOV     R8, PAUSA
-    MOV     R9, [R8]
-    CMP     R4, R7
-    JZ      pausa
 
 ha_tecla:									; neste ciclo espera-se até NENHUMA tecla estar premida
 	YIELD
@@ -451,35 +555,7 @@ ha_tecla:									; neste ciclo espera-se até NENHUMA tecla estar premida
     JNZ     ha_tecla                        ; se ainda houver uma tecla premida, espera até não haver
 	JMP		espera_tecla					; repete o ciclo
 
-pausa:
-    CMP     R9, 1
-    JNZ     mete_pausa
-    JMP     tira_pausa
 
-tira_pausa:
-    MOV     [APAGA_FRONTAL], R0             ; apaga o painel de pausa
-
-    MOV     R11, SOM_TEMA_PAUSA             ; endereço da música de fundo
-    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona a música de fundo
-    MOV     [TERMINA_SOM_OU_VIDEO], R11        ; começa a música de fundo
-
-    MOV     R11, 0
-    MOV     [R8], R11
-
-    JMP     ha_tecla
-
-mete_pausa:
-    MOV     R11, CENARIO_PAUSA
-    MOV     [DEFINE_FRONTAL], R11
-
-    MOV     R11, SOM_TEMA_PAUSA             ; endereço da música de fundo
-    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona a música de fundo
-    MOV     [REPRODUZ_EM_CICLO], R11        ; começa a música de fundo
-
-    MOV     R11, 1
-    MOV     [R8], R11
-
-    JMP     ha_tecla
 
 
 PROCESS SP_energia
@@ -490,7 +566,7 @@ energia:
     MOV     R5, [R5]
     CMP     R5, 1
     JZ      energia
-    MOV     R2, -30
+    MOV     R2, -3
     CALL    altera_energia_r
     JMP     energia
 
@@ -567,7 +643,6 @@ nave_int:
 						                    ; Usa-se 6 porque cada word tem 2 bytes
 	POP  R0
 	RFE
-
 
 
 ; **************************
@@ -791,44 +866,3 @@ informacoes_objeto:
 
     POP     R1
     RET
-
-; ****************************************************************************
-; GAME_OVER
-; Descrição: Termina o jogo.
-; Entradas:  ---------------
-; Saídas:    ---------------
-; ****************************************************************************
-
-game_over_energia:
-    MOV    R0, CENARIO_SEM_ENERGIA          ; cenário de fundo com a mensagem de sem energia
-    MOV    [DEFINE_CENARIO], R0             ; seleciona o cenário
-
-    CALL   game_over                        ; termina o jogo
-
-game_over:
-    PUSH    R0
-    PUSH    R3
-
-    MOV     R8, PAUSA
-    MOV     R11, 1
-    MOV     [R8], R11                       ; pausa o jogo
-
-    ;MOV     R0, SONDA                       ; endereço da tabela relativa à sonda
-    ;ADD     R0, 2                           ; endereço da variável que guarda o nº de movimentos realizados
-    ;CALL    reinicia_sonda                  ; reinicia a sonda
-    ;CALL    reinicia_asteroide              ; reinicia o asteróide
-    MOV     [APAGA_ECRAS], R0	            ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
-
-    MOV     R0, SOM_GAMEOVER                ; endereço do som de game over
-    MOV     [DEFINE_SOM_OU_VIDEO], R0       ; seleciona o som de fim de jogo
-    MOV     [INICIA_REPRODUCAO], R0         ; reproduz o som
-
-game_over_ciclo:
-    MOV     R3, [TECLA_CARREGADA]
-    MOV     R0, TECLA_START
-    CMP     R3, R0                          ; a tecla lida é o "C"?
-    JNZ     game_over_ciclo                 ; se não, continua à espera
-    
-    POP     R3
-    POP     R0
-    CALL    start                           ; reinicia o jogo
