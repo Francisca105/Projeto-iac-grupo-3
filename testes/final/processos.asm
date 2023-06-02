@@ -31,6 +31,8 @@ DEFINE_COLUNA               EQU 600CH       ; comando que define a coluna
 ALTERA_COR_SONDA_C          EQU 6012H       ; comando que altera a cor do pixel corrente
 APAGA_AVISO                 EQU 6040H       ; comando que apaga o cenário de fundo e elimina aviso
 DEFINE_CENARIO              EQU 6042H       ; comando que define o cenário
+DEFINE_FRONTAL              EQU 6046H       ; comando que define o cenário
+APAGA_FRONTAL               EQU 6044H       ; comando que define o cenário
 DEFINE_SOM_OU_VIDEO         EQU 6048H       ; comando que define o som/vídeo
 INICIA_REPRODUCAO           EQU 605AH       ; comando que inicia a reprodução do som/vídeo
 REPRODUZ_EM_CICLO           EQU 605CH       ; comando que reproduz um som/vídeo em ciclo
@@ -42,12 +44,14 @@ CENARIO_MENU                EQU 0           ; número do cenário do fundo do me
 CENARIO_JOGO                EQU 1           ; número do cenário do fundo do jogo
 CENARIO_TERMINADO           EQU 2           ; número do cenário do fundo de quando se termina o jogo
 CENARIO_SEM_ENERGIA         EQU 3           ; número do cenário do fundo de quando se fica sem energia
+CENARIO_PAUSA               EQU 4           ; número do cenário frontal de quando se pausa o jogo
 
 SOM_TEMA                    EQU 0           ; número da música de fundo
 SOM_START                   EQU 1           ; número do som quando se começa o jogo
 SOM_LASER                   EQU 2           ; número do som quando se dispara a sonda
 SOM_GAMEOVER                EQU 3           ; número do som quando se perde o jogo
 SOM_ASTEROIDE_DESCE         EQU 4           ; número do som quando o asteróide desce
+SOM_TEMA_PAUSA              EQU 5           ; número da música de fundo quando se pausa o jogo
 
 ; CORES
 COR_SONDA                   EQU 0FF00H
@@ -311,6 +315,7 @@ inicio:
 
     MOV     [APAGA_AVISO], R0				; apaga o aviso de nenhum cenário selecionado
     MOV     [APAGA_ECRAS], R0				; apaga todos os pixels
+    MOV     [APAGA_FRONTAL], R0				; apaga o ecrã frontal
 	MOV	    R0, CENARIO_MENU				; cenário do menu
     MOV     [DEFINE_CENARIO], R0            ; seleciona o cenário de fundo
 
@@ -318,15 +323,16 @@ inicio:
     MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona a música de fundo
     MOV     [REPRODUZ_EM_CICLO], R1         ; começa a música de fundo
 
+    MOV     R0, ENERGIA                     ; endereço da variável que guarda a energia do display
+    MOV     R1, 0                           
+    MOV     [R0], R1                        ; inicia a energia com o valor 0
+    CALL    display                         ; mostra o nível de energia na nave
+
 ;    EI0
 ;    EI1
     EI2
     EI3
     EI
-
-    MOV     R0, ENERGIA
-    MOV     R1, DISPLAYS
-    MOV     [R1], R0
 
 menu:
     MOV     R0, [TECLA_CARREGADA]
@@ -335,6 +341,15 @@ menu:
     JNZ     menu
 
 start:
+    MOV     R8, PAUSA
+    MOV     R11, 0
+    MOV     [R8], R11                       ; tira o jogo da pausa
+
+    MOV     R0, ENERGIA                     ; endereço da variável que guarda a energia do display
+    MOV     R1, ENERGIA_INI                 ; número de energia inicial
+    MOV     [R0], R1                        ; inicia a energia com o valor 100H
+    CALL    display                         ; mostra o nível de energia na nave
+
 	MOV	    R0, CENARIO_JOGO				; cenário de fundo número
     MOV     [DEFINE_CENARIO], R0	        ; seleciona o cenário de fundo
 
@@ -350,24 +365,20 @@ start:
     MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona a música de start
     MOV     [INICIA_REPRODUCAO], R1         ; reproduz o som de start
 
+    MOV     R0, POS_NAVE                    ; coordenadas da nave
+    MOV     R1, DEF_NAVE                    ; protótipo da nave
+    CALL    desenha_objeto                  ; desenha a nave
+
     CALL    energia
     CALL    muda_painel
 
 main:
     YIELD
-    MOV     R0, PAUSA
-    MOV     R0, [R0]
-    CMP     R0, 1
-    JZ      smth
+    ;MOV     R0, [TECLA_CARREGADA]
+
     JMP     main
-smth:
-    MOV     R2, 482
-    CALL altera_energia_r
-    JMP main
 
-
-
-
+; ****************************************************************************
 
 PROCESS SP_teclado
 teclado:
@@ -442,14 +453,32 @@ ha_tecla:									; neste ciclo espera-se até NENHUMA tecla estar premida
 
 pausa:
     CMP     R9, 1
-    JNZ      mete_pausa
+    JNZ     mete_pausa
+    JMP     tira_pausa
+
+tira_pausa:
+    MOV     [APAGA_FRONTAL], R0             ; apaga o painel de pausa
+
+    MOV     R11, SOM_TEMA_PAUSA             ; endereço da música de fundo
+    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona a música de fundo
+    MOV     [TERMINA_SOM_OU_VIDEO], R11        ; começa a música de fundo
+
     MOV     R11, 0
     MOV     [R8], R11
+
     JMP     ha_tecla
 
 mete_pausa:
+    MOV     R11, CENARIO_PAUSA
+    MOV     [DEFINE_FRONTAL], R11
+
+    MOV     R11, SOM_TEMA_PAUSA             ; endereço da música de fundo
+    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona a música de fundo
+    MOV     [REPRODUZ_EM_CICLO], R11        ; começa a música de fundo
+
     MOV     R11, 1
     MOV     [R8], R11
+
     JMP     ha_tecla
 
 
@@ -461,7 +490,7 @@ energia:
     MOV     R5, [R5]
     CMP     R5, 1
     JZ      energia
-    MOV     R2, -3
+    MOV     R2, -30
     CALL    altera_energia_r
     JMP     energia
 
@@ -576,6 +605,7 @@ energia_zero:
     POP     R2
     POP     R1
     POP     R0
+    JMP     game_over_energia               ; termina o jogo
 
 
 
@@ -761,3 +791,44 @@ informacoes_objeto:
 
     POP     R1
     RET
+
+; ****************************************************************************
+; GAME_OVER
+; Descrição: Termina o jogo.
+; Entradas:  ---------------
+; Saídas:    ---------------
+; ****************************************************************************
+
+game_over_energia:
+    MOV    R0, CENARIO_SEM_ENERGIA          ; cenário de fundo com a mensagem de sem energia
+    MOV    [DEFINE_CENARIO], R0             ; seleciona o cenário
+
+    CALL   game_over                        ; termina o jogo
+
+game_over:
+    PUSH    R0
+    PUSH    R3
+
+    MOV     R8, PAUSA
+    MOV     R11, 1
+    MOV     [R8], R11                       ; pausa o jogo
+
+    ;MOV     R0, SONDA                       ; endereço da tabela relativa à sonda
+    ;ADD     R0, 2                           ; endereço da variável que guarda o nº de movimentos realizados
+    ;CALL    reinicia_sonda                  ; reinicia a sonda
+    ;CALL    reinicia_asteroide              ; reinicia o asteróide
+    MOV     [APAGA_ECRAS], R0	            ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
+
+    MOV     R0, SOM_GAMEOVER                ; endereço do som de game over
+    MOV     [DEFINE_SOM_OU_VIDEO], R0       ; seleciona o som de fim de jogo
+    MOV     [INICIA_REPRODUCAO], R0         ; reproduz o som
+
+game_over_ciclo:
+    MOV     R3, [TECLA_CARREGADA]
+    MOV     R0, TECLA_START
+    CMP     R3, R0                          ; a tecla lida é o "C"?
+    JNZ     game_over_ciclo                 ; se não, continua à espera
+    
+    POP     R3
+    POP     R0
+    CALL    start                           ; reinicia o jogo

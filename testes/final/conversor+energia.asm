@@ -135,12 +135,20 @@ PLACE       1000H
 STACK       100H
 SP_inicial:
 
+STACK       100H
+SP_energia:
+
 ; ****************************************************************************
-tab:                        ; Tabela de interrupções
-	WORD rot_int_0			; rotina de atendimento da interrupção 0
+tab_int:                                    ; Tabela de interrupções
+    WORD 0
+    WORD 0
+    WORD energia_int                        ; rotina de atendimento da interrupção 2
+	WORD nave_int			                ; rotina de atendimento da interrupção 3
 
 ; ****************************************************************************
 
+PAUSA:
+    LOCK    0    
 
 ENERGIA:
     WORD    ENERGIA_INI
@@ -263,6 +271,12 @@ MOV_SONDA:
     WORD    VERTICAL_M1
     WORD    HORIZONTAL_0
 
+evento_int:
+	WORD 0				; se 1, indica que a interrupção 0 ocorreu
+	WORD 0				; se 1, indica que a interrupção 1 ocorreu
+	WORD 0				; se 1, indica que a interrupção 2 ocorreu
+	WORD 0				; se 1, indica que a interrupção 3 ocorreu
+
 ; ****************************************************************************
 ; * CODIGO 
 ; ****************************************************************************
@@ -271,7 +285,7 @@ PLACE       0
 inicio:
     MOV     SP, SP_inicial
 
-    MOV     BTE, tab			            ; inicializa BTE (registo de Base da Tabela de Exceopções)
+    MOV     BTE, tab_int			            ; inicializa BTE (registo de Base da Tabela de Exceopções)
 
     MOV     [APAGA_AVISO], R0				; apaga o aviso de nenhum cenário selecionado
     MOV     [APAGA_ECRAS], R0				; apaga todos os pixels
@@ -312,6 +326,9 @@ start:
 main:
     MOV     R0, ENERGIA                     ; endereço da variável que guarda a energia do display
     MOV     R1, ENERGIA_INI                 ; número de energia inicial
+    
+    ADD     R1, 3                           ; !!!! REVER
+
     MOV     [R0], R1                        ; inicia a energia com o valor 100H
     CALL    display                         ; mostra o nível de energia no nave
 
@@ -336,7 +353,8 @@ main:
 
     MOV     R0, NAO_PREM                    ; tecla não premida
 
-    EI0                                     ; ativa a interrupção do timer 0
+    EI2                                     ; ativa a interrupção do timer 2
+    EI3                                     ; ativa a interrupção do timer 3
     EI                                      ; ativa as interrupções
 
 espera_tecla:
@@ -358,7 +376,7 @@ diminui_energia:
     CMP     R3, R1                          ; a tecla lida é o "2"?
     JNZ     dispara_sonda                   ; se não, verifica a próxima
 
-    MOV     R2, -95                           ; incrementa a energia em uma unidade
+    MOV     R2, -2                           ; incrementa a energia em uma unidade
     CALL    altera_energia_r                ; incrementa a energia em uma unidade
 
     CALL    premida                         ; espera que a tecla deixe de ser premida
@@ -389,43 +407,42 @@ termina_jogo:
     CALL    game_over                       ; termina o jogo
     JMP     start
 
-; ****************************************************************************
-; ALTERA_ENERGIA
-; Descrição: Incrementa/decrementa o nível de energia do display.
-; Entradas:  R2 - Nível de energia a incrementar/decrementar (negativo para decrementar)
-; Saídas:    -------------------
-; ****************************************************************************
+    ; ****************************************************************************
+    ; ALTERA_ENERGIA
+    ; Descrição: Incrementa/decrementa o nível de energia do display.
+    ; Entradas:  R2 - Nível de energia a incrementar/decrementar (negativo para decrementar)
+    ; Saídas:    -------------------
+    ; ****************************************************************************
 
-altera_energia_r:
-    PUSH    R0
-    PUSH    R1
-    PUSH    R2
+    altera_energia_r:
+        PUSH    R0
+        PUSH    R1
+        PUSH    R2
 
-    MOV     R0, ENERGIA                     ; endereço da energia atual do display 
-    MOV     R1, [R0]                        ; energia atual do display
-    ADD     R1, R2                          ; acrescenta o valor pretendido à energia atual
+        MOV     R0, ENERGIA                     ; endereço da energia atual do display 
+        MOV     R1, [R0]                        ; energia atual do display
+        ADD     R1, R2                          ; acrescenta o valor pretendido à energia atual
 
-    CMP     R1, 0                           ; a energia atual é menor que zero?
-    JLE      energia_zero                    ; se sim, atualiza a energia para zero
+        CMP     R1, 0                           ; a energia atual é menor que zero?
+        JLE      energia_zero                    ; se sim, atualiza a energia para zero
 
-    MOV     [R0], R1                        ; atualiza a variável que guarda a energia
-    CALL    display                         ; atualiza o display
+        MOV     [R0], R1                        ; atualiza a variável que guarda a energia
+        CALL    display                         ; atualiza o display
 
-    POP     R2
-    POP     R1
-    POP     R0
-    RET
+        POP     R2
+        POP     R1
+        POP     R0
+        RET
 
-energia_zero:
-    MOV     R1, 0                           ; energia atual é zero
-    MOV     [R0], R1                        ; atualiza a variável que guarda a energia
-    CALL    display                         ; atualiza o display
+    energia_zero:
+        MOV     R1, 0                           ; energia atual é zero
+        MOV     [R0], R1                        ; atualiza a variável que guarda a energia
+        CALL    display                         ; atualiza o display
 
-    POP     R2
-    POP     R1
-    POP     R0
-    JMP     game_over_energia               ; termina o jogo
-
+        POP     R2
+        POP     R1
+        POP     R0
+        JMP     game_over_energia               ; termina o jogo
 
 ; ****************************************************************************
 ; ROTINAS
@@ -789,10 +806,6 @@ sonda:
     JZ      cria_sonda                      ; se não, cria uma nova
 
 move_sonda:
-    MOV     R1, SOM_LASER                   ; endereço da música de fundo
-    MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona a música de start
-    MOV     [INICIA_REPRODUCAO], R1         ; reproduz o som de start
-
     MOV     [APAGA_ECRA], R6                ; apaga a sonda atual
     ADD     R0, 2                           ; endereço dos movimentos da sonda
     MOV     R1, [R0]                        ; movimentos da sonda
@@ -812,12 +825,19 @@ setup_move_sonda:
     JMP     exit_sonda
 
 cria_sonda:
+    MOV     R1, SOM_LASER                   ; endereço do som de laser
+    MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona o som
+    MOV     [INICIA_REPRODUCAO], R1         ; reproduz o som
+
     MOV     R2, LINHA_SONDA                 ; linha inicial da sonda
     MOV     R3, COLUNA_SONDA                ; coluna da sonda
     MOV     R6, COR_SONDA                   ; cor da sonda
     CALL    desenha_pixel                   ; desenha a sonda
     MOV     R3, ON                          ; sinal ON (1)
     MOV     [R0], R3                        ; atualiza a variável relativa à existẽncia da sonda
+
+    MOV     R2, -5                          ; ao lançar a sonda, esta vai tirar 5 de energia
+    CALL    altera_energia_r
 
 exit_sonda:
     POP     R6
@@ -956,18 +976,64 @@ game_over_restart:
     JMP     start                           ; reinicia o jogo
 
 
+PROCESS SP_energia
+YIELD
+
+baixar_energia_3:
+    MOV     R1, evento_int
+    MOV     R2, [R1+4]
+    CMP     R2, 0
+    JZ     baixar_energia_3
+
+    MOV     R2, 0
+	MOV     [R1+4], R2		                ; assinala que a interrupção foi tratada
+
+    MOV     R2, -3
+    CALL    altera_energia_r
+
+    CALL    baixar_energia_3
+    
+
 
 ; ****************************************************************************
 ; INTERRUPÇÕES
 ; ****************************************************************************
 
 ; ****************************************************************************
-; INT_0
-; Descrição: Trata a interrupção do temporizador 0.
+; energia_int
+; Descrição: Trata a interrupção do temporizador 2.
+;            Num ciclo de 3 em 3 segundos baixa a energia em 3%.
 ; Entradas:  ---------------
 ; Saídas:    ---------------
 ; ****************************************************************************
 
-rot_int_0:
-    CALL     muda_painel                    ; muda o painel
-    RFE                                     ; retorna da interrupção
+energia_int:
+	PUSH R0
+	PUSH R1
+
+	MOV  R0, evento_int
+	MOV  R1, 1			                    ; assinala que houve uma interrupção 0
+	MOV  [R0+4], R1		                    ; na componente 2 da variável evento_int
+						                    ; Usa-se 4 porque cada word tem 2 bytes
+	POP  R1
+	POP  R0
+	RFE
+
+; ****************************************************************************
+; nave_int
+; Descrição: Trata a interrupção do temporizador 3.
+;            Muda as cores do painel.
+; Entradas:  ---------------
+; Saídas:    ---------------
+; ****************************************************************************
+
+nave_int:
+	PUSH R0
+	PUSH R1
+	MOV  R0, evento_int
+	MOV  R1, 1			                    ; assinala que houve uma interrupção 0
+	MOV  [R0+6], R1		                    ; na componente 3 da variável evento_int
+						                    ; Usa-se 6 porque cada word tem 2 bytes
+	POP  R1
+	POP  R0
+	RFE

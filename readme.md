@@ -13,9 +13,26 @@
 - Asteroide a mexer com interrupções
 - Gerador de asteroides
 - Colisões
-- Interrupção para baixar a energia
-- Não meter energia abaixo de 0
+- ~~Interrupção para baixar a energia~~
+- ~~Não meter energia abaixo de 0~~
+- ~~Função de mudar a energia por argumentos~~
 - Pausa
+
+###### Processos:
+
+- ~~Teclado~~
+- Controlo (?)
+- ~~Nave~~
+- ~~Energia~~
+- Sonda
+- Asteroide
+
+###### Pausa:
+
+- ~~Nave~~
+- ~~Energia~~
+- Sonda
+- Asteroide
 
 ---
 
@@ -32,8 +49,8 @@
 Sons:
 
 - ~~Menu inicial + start~~
-- Menu pausa
-- Continuar jogo
+- ~~Menu pausa~~
+- ~~Continuar jogo~~
 - ~~Laser~~
 - Explosão
 - ~~Fim de jogo~~
@@ -41,7 +58,7 @@ Sons:
 Fundos:
 
 * ~~Durante jogo~~
-* ~~Pausa~~ (tentar colocar só o texto à frente do jogo pausado)
+* ~~Pausa~~ ~~(tentar colocar só o texto à frente do jogo pausado)~~
 * ~~Perdeu~~
 * ~~Menu inicial~~
 
