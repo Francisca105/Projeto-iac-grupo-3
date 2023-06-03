@@ -460,6 +460,10 @@ mete_pausa:
     MOV     R11, CENARIO_PAUSA              ; cenário da pausa
     MOV     [DEFINE_FRONTAL], R11           ; coloca o cenário à frente de tudo
 
+    MOV     R1, SOM_TEMA_JOGO               ; endereço da música de fundo
+    MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona a música de fundo
+    MOV     [PAUSA_SOM_OU_VIDEO], R1        ; pausa a música de fundo
+
     MOV     R11, SOM_TEMA_PAUSA             ; endereço da música de fundo
     MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona a música de fundo
     MOV     [REPRODUZ_EM_CICLO], R11        ; começa a música de fundo
@@ -617,7 +621,7 @@ processo_energia:
     MOV     R5, [R5]                        ; estado atual do jogo
     CMP     R5, 1                           ; o jogo está pausado?
     JZ      processo_energia                ; se sim, repete o ciclo
-    MOV     R2, -3                          ; o decremento é de 3%
+    MOV     R2, -50                          ; o decremento é de 3%
     CALL    altera_energia                  ; altera a energia da nave
     JMP     processo_energia                ; repete o ciclo
 
