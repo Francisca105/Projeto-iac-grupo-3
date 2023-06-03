@@ -362,6 +362,9 @@ menu:
     CMP     R0, R1                          ; a tecla lida é o "C"?
     JNZ     menu                            ; se não, continua à espera
 
+    CALL    processo_energia                ; inicia o processo energia
+    CALL    processo_nave                   ; inicia o processo nave
+
 start:
     MOV     R8, PAUSA                       ; endereço do estado atual do jogo
     MOV     R11, 0                          ; 0 simboliza jogo não pausado
@@ -395,8 +398,6 @@ start:
     MOV     R1, DEF_NAVE                    ; protótipo da nave
     CALL    desenha_objeto                  ; desenha a nave
 
-    CALL    processo_energia                ; inicia o processo energia
-    CALL    processo_nave                   ; inicia o processo nave
     CALL    processo_controlos              ; incia o processo controlos
 
 main:
@@ -423,7 +424,7 @@ processo_controlos:
 
     MOV     R1, TECLA_TERMINAR              ; tecla para terminar o jogo (E)
     CMP     R0, R1                          ; a tecla lida é o "E"?
-    JZ     game_over_terminado              ; se sim, termina o jogo
+    JZ      game_over_terminado             ; se sim, termina o jogo
 
     MOV     R1, TECLA_PAUSAR                ; tecla para pausar o jogo (D)
     CMP     R0, R1                          ; a tecla lida é o "D"?
