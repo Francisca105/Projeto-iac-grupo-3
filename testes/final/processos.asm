@@ -1,5 +1,5 @@
 ; ****************************************************************************
-; * IST-UL, ASA, 2019/2020                                                   *
+; * IST-UL, IAC                                                              *
 ; * Projeto Beyond Mars - Versão intermédia - 26/05/2023                     *
 ; *                                                                          *
 ; * Realizado por:                                                           *
@@ -75,7 +75,7 @@ ECRA_2                      EQU 2
 
 ; TECLADO
 LIN_INI                     EQU 1           ; primeira linha a testar (1ª linha, 0001b)
-LINHA_TECLADO                     EQU 8           ; última linha (4ª linha, 1000b)
+LINHA_TECLADO               EQU 8           ; última linha (4ª linha, 1000b)
 MASC_TEC                    EQU 0FH         ; para isolar os 4 bits de menor peso, ao ler as colunas do teclado
 
 ; TECLAS
@@ -311,7 +311,7 @@ PLACE       0
 inicio:
     MOV     SP, SP_inicial
 
-    MOV     BTE, tab_int			            ; inicializa BTE (registo de Base da Tabela de Exceopções)
+    MOV     BTE, tab_int			        ; inicializa BTE (registo de Base da Tabela de Exceopções)
 
     CALL    teclado
 
@@ -454,10 +454,10 @@ game_over_terminado:
     CALL    game_over                       ; termina o jogo
 
 game_over_energia:
-    MOV    R0, CENARIO_SEM_ENERGIA          ; cenário de fundo com a mensagem de sem energia
-    MOV    [DEFINE_CENARIO], R0             ; seleciona o cenário
+    MOV     R0, CENARIO_SEM_ENERGIA         ; cenário de fundo com a mensagem de sem energia
+    MOV     [DEFINE_CENARIO], R0            ; seleciona o cenário
 
-    CALL   game_over                        ; termina o jogo
+    CALL    game_over                       ; termina o jogo
 
 game_over:
     PUSH    R0
@@ -620,12 +620,12 @@ desenha_painel:
 ; **************************
 
 energia_int:
-	PUSH R0
+	PUSH    R0
 
-	MOV  R0, evento_int			                    ; assinala que houve uma interrupção 0
-	MOV  [R0+4], R1		                    ; na componente 2 da variável evento_int
+	MOV     R0, evento_int			        ; assinala que houve uma interrupção 0
+	MOV     [R0+4], R1		                ; na componente 2 da variável evento_int
 						                    ; Usa-se 4 porque cada word tem 2 bytes
-	POP  R0
+	POP     R0
 	RFE
 
 ; **************************
@@ -637,11 +637,11 @@ energia_int:
 ; **************************
 
 nave_int:
-	PUSH R0
-	MOV  R0, evento_int
-	MOV  [R0+6], R1		                    ; na componente 3 da variável evento_int
+	PUSH    R0
+	MOV     R0, evento_int
+	MOV     [R0+6], R1		                ; na componente 3 da variável evento_int
 						                    ; Usa-se 6 porque cada word tem 2 bytes
-	POP  R0
+	POP     R0
 	RFE
 
 
@@ -662,7 +662,7 @@ altera_energia_r:
     ADD     R1, R2                          ; acrescenta o valor pretendido à energia atual
 
     CMP     R1, 0                           ; a energia atual é menor que zero?
-    JLE      energia_zero                    ; se sim, atualiza a energia para zero
+    JLE     energia_zero                    ; se sim, atualiza a energia para zero
 
     MOV     [R0], R1                        ; atualiza a variável que guarda a energia
     CALL    display                         ; atualiza o display
