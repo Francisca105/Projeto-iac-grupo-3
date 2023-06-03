@@ -16,12 +16,12 @@
 - ~~Interrupção para baixar a energia~~
 - ~~Não meter energia abaixo de 0~~
 - ~~Função de mudar a energia por argumentos~~
-- Pausa
+- ~~Pausa~~
 
 ###### Processos:
 
 - ~~Teclado~~
-- Controlo (?)
+- ~~Controlo~~
 - ~~Nave~~
 - ~~Energia~~
 - Sonda
