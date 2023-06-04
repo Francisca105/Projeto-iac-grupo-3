@@ -740,7 +740,7 @@
     "simGuiXRelative" : 81,
     "simGuiYRelative" : 22,
     "simGuiWidth" : 790,
-    "simGuiHeight" : 857,
+    "simGuiHeight" : 778,
     "clockPeriod" : 200,
     "startAutomatically" : true,
     "simulationMaster" : true,
@@ -769,7 +769,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "testes/final/processos+sonda-comentados.asm",
+    "programFilePathName" : "testes/final/gameover-fixed copy.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",

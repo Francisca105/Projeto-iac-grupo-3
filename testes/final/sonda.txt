@@ -1,0 +1,35 @@
+-> definição das sondas (ON/OFF, Movimentos restantes)
+-> definição dos movimentos (linha, coluna)
+-> definição da posição onde se encontra (linha, coluna)
+
+-> *LOCK* - colocar um lock de forma a colocar o processo da sonda em ciclo e em espera que seja primida uma tecla da sonda
+            1 - sonda esquerda
+            2 - sonda meio
+            3 - sonda direita
+
+
+Processo sonda:
+- sonda:
+    le o lock e depois ve qual dos numeros é para passar à respetiva rotina
+
+- sonda_X:
+    inicializa a sonda, coloca os argumentos necessários e etc 
+
+- cria_sonda:
+    reproduz o som do laser e desenha o pixel da sonda (also muda o status da sonda para ON)
+
+- move_sonda:
+    espera pela interrupção
+    apaga o ecrã
+    setup_move_sonda se não tiver passado dos 12 movimentos
+    reinicia_sonda se tiver passado
+
+- setup_move_sonda:
+    tira um movimento e move_objeto
+    (volta para o move_sonda)
+
+- reinicia_sonda:
+    passa o valor da sonda a OFF
+    reinicia os movimentos da sonda (12)
+    reescreve a linha e coluna inicial da sonda
+    
