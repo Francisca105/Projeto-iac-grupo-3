@@ -152,7 +152,7 @@ OFF_PIXEL                   EQU 4           ; offset para obter o pixel de um ob
 OFF_HORIZONTAL              EQU 2           ; offset para obter o movimento horizontal de um objeto
 
 ; Jogo
-ENERGIA_INI                 EQU 64H         ; quantidade de enrgia inicial
+ENERGIA_INI                 EQU 64H         ; quantidade de energia inicial
 
 
 ; ****************************************************************************
@@ -317,6 +317,9 @@ TECLA_CARREGADA:                            ; última tecla carregada
     LOCK    0
 
 REINICIA_JOGO:                              ; LOCK para reiniciar o jogo
+    LOCK    0
+
+ESPERA_SONDA:
     LOCK    0
 
 tab_int:                                    ; tabela das rotinas de interrupção
@@ -591,7 +594,8 @@ sonda_esquerda:
 
     CMP     R11, 0
     JZ      cria_sonda                      ; cria uma sonda caso já não exista
-    JMP     fim_sonda
+    JMP     move_sonda
+    ;JMP     fim_sonda
 
 cria_sonda:
     MOV     R11, SOM_LASER                  ; endereço do som do laser
@@ -651,8 +655,8 @@ reinicia_sonda:
     MOV     [R0],  R6                       ; linha da sonda inicial
     MOV     [R0+2],  R7                     ; coluna da sonda inicial
 
-fim_sonda:
-    JMP     fim_sonda
+;fim_sonda:
+    ;JMP     fim_sonda
 
 
 
