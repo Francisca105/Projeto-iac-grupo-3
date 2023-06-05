@@ -131,7 +131,7 @@ COLUNA_SONDA_ESQ            EQU 26          ; coluna onde a sonda que é lançad
 HORIZONTAL_ESQ              EQU -1          ; movimento horizontal da sonda que é lançada da esquerda
 
 COLUNA_SONDA_DIR            EQU 37          ; coluna onde a sonda que é lançada da direita começa
-HORIZONTAL_DIR              EQU -1          ; movimento horizontal da sonda que é lançada da direita
+HORIZONTAL_DIR              EQU 0          ; movimento horizontal da sonda que é lançada da direita
 
 ; Offsets
 OFF_COLUNA                  EQU 2           ; offset para obter a coluna de um objeto a partir do seu endereço
@@ -315,7 +315,7 @@ tab_int:                                    ; tabela das rotinas de interrupçã
     WORD    nave_int
 
 evento_int:                                 ; tabela das ocorrências de interrupções
-    WORD    0
+    LOCK    0
     WORD    0
     LOCK    0
     LOCK    0
@@ -349,7 +349,7 @@ inicio:
     CALL    display                         ; mostra o nível de energia na nave
 
 ;    EI0                                     ; permite a interrupção 0
-;    EI1                                     ; permite a interrupção 1
+    EI1                                     ; permite a interrupção 1
     EI2                                     ; permite a interrupção 2
     EI3                                     ; permite a interrupção 3
     EI                                      ; permite interrupções (geral)
@@ -396,9 +396,8 @@ start:
     MOV     R0, POS_NAVE                    ; coordenadas da nave
     MOV     R1, DEF_NAVE                    ; protótipo da nave
     CALL    desenha_objeto                  ; desenha a nave
-
-    CALL    cria_sonda
     CALL    sonda_ciclo_start
+    
 
 main:
     YIELD
@@ -408,66 +407,36 @@ main:
 
     JMP     main
 
-cria_sonda:
-    MOV     R11, SOM_LASER                  ; endereço do som do laser
-    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona o som
-    MOV     [INICIA_REPRODUCAO], R11        ; reproduz o som
-
-    PUSH    R0
-    PUSH    R2
-    PUSH    R3
-    PUSH    R6
-    PUSH    R11
-
-    MOV     R0, POS_SONDAS
-    ADD     R0, 4
-    ADD     R0, 4
-    MOV     R2, R0
-    MOV     R2, [R2]
-    MOV     R3, R0
-    ADD     R3, 2
-    MOV     R3, [R3]
-    MOV     R6, COR_SONDA
-
-    CALL    desenha_pixel
-
-    MOV     R11, ON
-    MOV     R0, R11
-    
-    POP    R11
-    POP     R6
-    POP     R3
-    POP     R2
-    POP     R0
-
-
-    RET
-
 ; **********
 ; PROCESSOS
 ; **********
 PROCESS processo_sonda_ciclo
 
 sonda_ciclo_start:
+    YIELD
     MOV     R6, SONDAS                      ; tabela das sondas
     MOV     R0, POS_SONDAS                  ; posição das sondas
     MOV     R2, MOV_SONDA                   ; movimentos das sondas
-    MOV     R3, DEF_SONDA                   ; definição da sonda
+    MOV     R1, DEF_SONDA                   ; definição da sonda
     
 
     MOV     R10, evento_int                 ; tabela das ocorrências das interrupções
     MOV     R11, [R10+2]                    ; ocorrência da interrupção 1
+    CMP     R11, 1
+    JNZ     sonda_ciclo_start
+    MOV     R11, 0
+    MOV     [R10+2], R11
 
     MOV     R9, PAUSA                       ; endereço do estado atual do jogo
     MOV     R9, [R9]                        ; estado atual do jogo
     CMP     R9, 1                           ; o jogo está pausado?
     
-    JZ      sonda_ciclo_start               ; se sim, rpete o ciclo
+    JZ      sonda_ciclo_start               ; se sim, repete o ciclo
 
 sonda_esquerda:
     MOV     R8, COLUNA_SONDA_ESQ            ; coluna inicial da sonda esquerda
 
-    CALL    move_sonda                      ; move a sonda
+    CALL    verifica_sonda                      ; move a sonda
 
 sonda_meio:
     ADD     R6, 6                           ; tabela da sonda do meio
@@ -477,9 +446,9 @@ sonda_meio:
 
     MOV     R8, COLUNA_SONDA_MEIO           ; coluna inicial da sonda do meio
     
-    CALL    move_sonda                      ; move a sonda
+    CALL    verifica_sonda                      ; move a sonda
 
-sonda_direita:
+sonda_direita:    
     ADD     R6, 6                           ; tabela da sonda da direita
     ADD     R0, 4                           ; posição da sonda da direita
     ADD     R2, 4                           ; movimentos da sonda da direita
@@ -487,29 +456,54 @@ sonda_direita:
 
     MOV     R8, COLUNA_SONDA_DIR
 
-    CALL    move_sonda
-    CALL    sonda_ciclo_start
+    CALL    verifica_sonda
+    JMP     sonda_ciclo_start
     
-move_sonda:
+verifica_sonda:
     MOV     R4, [R6]                          ; copia a tabela das sondas
-    ;MOV     R4, [R4]                        ; indicação se a sonda já existe
 
     CMP     R4, ON                          ; a sonda já existe?
     JNZ     exit_verifica                   ; se sim, passa para a sonda seguinte
 
     MOV     R4, [R6+2]                      ; endereço do nº de movimentos do asteróide
     MOV     R5, MOVIMENTOS
-    CMP     R4, R5                          ; já realizou o nº máximo de movimentos?
-    JZ      reinicia_sonda                  ; se sim, reinicia a sonda
-    
+    CMP     R4, 0                          ; já realizou o nº máximo de movimentos?
     MOV     R5, [R6+4]                      ; ecrã da sonda
     MOV     [SELECIONA_ECRA], R5            ; seleciona o ecrã da respetiva sonda
+    MOV     [APAGA_ECRA], R5
+    JZ      reinicia_sonda                  ; se sim, reinicia a sonda
+    
 
     MOV     R7, [R6+2]
-    ADD     R7, -1
+    SUB     R7, 1
     MOV     [R6+2], R7                       ; tira um movimento da sonda
 
-    CALL    move_objeto
+
+move_sonda:
+    PUSH    R2
+    PUSH    R3
+    PUSH    R6
+    PUSH    R4
+
+    MOV     R4, R2
+
+    MOV     R2, [R0]                        ; lê a linha da sonda
+    MOV     R5, [R4]                        ; lê o número do movimento horizontal
+    ADD     R2, -1                          ; tira uma linha (movimento de subida)
+    MOV     R3, [R0+2]                      ; lê a coluna
+    ADD     R3, R5                          ; acrescenta o movimento ao número da coluna
+    MOV     R6, COR_SONDA                   
+
+    CALL    desenha_pixel
+
+    MOV     [R0], R2                        ; atualiza a linha
+    MOV     [R0+2], R3                      ; atualiza a coluna
+    
+    POP     R4
+    POP     R6
+    POP     R3
+    POP     R2
+
     RET
 
 
@@ -517,12 +511,12 @@ exit_verifica:
     RET
 
 reinicia_sonda:
-    MOV     R5, OFF
+    MOV     R5, OFF                       
     MOV     [R6], R5                        ; simboliza sonda desligada
     MOV     R4, R0                          ; posição da sonda
     
     MOV     R5, LINHA_SONDA
-    MOV     [R4], R5               ; reinicia a linha
+    MOV     [R4], R5                        ; reinicia a linha
     
     ADD     R4, 2                           ; coluna da sonda
     MOV     [R4], R8                        ; reinicia a coluna
@@ -546,6 +540,13 @@ processo_controlos:
     JZ      pausa                           ; se sim, pausa o jogo
 
     JMP     processo_controlos              ; se não for nenhuma das teclas anteriores, repete o ciclo
+
+;sonda_esquerda_controlo:
+    ;MOV     R1, SONDAS
+    ;MOV     R2, MOV_SONDA
+    ;MOV     R3, DEF_SONDA
+    ;MOV     R4, POS_SONDA
+    
 
 termina_jogo:
     CALL    game_over_terminado             ; termina o jogo
@@ -764,10 +765,12 @@ PROCESS SP_energia
 processo_energia:
     MOV     R1, evento_int                  ; tabela das ocorrências das interrupções
     MOV     R2, [R1+4]                      ; ocorrência da interrupção 2
+
     MOV     R5, PAUSA                       ; endereço do estado atual do jogo
     MOV     R5, [R5]                        ; estado atual do jogo
     CMP     R5, 1                           ; o jogo está pausado?
     JZ      processo_energia                ; se sim, repete o ciclo
+
     MOV     R2, -3                          ; o decremento é de 3%
     CALL    altera_energia                  ; altera a energia da nave
     JMP     processo_energia                ; repete o ciclo
@@ -884,10 +887,15 @@ PROCESS SP_nave
 processo_nave:
     MOV     R1, evento_int                  ; tabela das ocorrências de interrupções
     MOV     R2, [R1+6]                      ; ocorrência da interrupção 3
+
     MOV     R5, PAUSA                       ; endereço estado atual do jogo
     MOV     R5, [R5]                        ; estado atual do jogo
     CMP     R5, 1                           ; o jogo está pausado?
     JZ      processo_nave                   ; se sim, repete o ciclo
+
+    MOV     R1, ECRA_NAVE
+    MOV     [SELECIONA_ECRA], R1
+
     MOV     R2, PAINEL                      ; endereço da variável que guarda o nº do painel atual
     MOV     R4, [R2]                        ; número do painel atual
     ROL     R4, 2                           ; passa ao painel seguinte
@@ -924,7 +932,7 @@ sondas_int:
 	PUSH R0
 
 	MOV  R0, evento_int			            ; tabela das ocorrências de interrupções
-                                            ; desbloqueia processo energia (qualquer registo serve)
+    MOV R1, 1                                        ; desbloqueia processo energia (qualquer registo serve)
 	MOV  [R0+2], R1		                    ; na componente 1 da variável evento_int
 						                    ; Usa-se 4 porque cada word tem 2 bytes
 	POP  R0
