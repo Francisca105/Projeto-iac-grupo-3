@@ -574,6 +574,8 @@ tira_pausa:
     MOV     R11, 0                          ; 0 simboliza joga não pausado
     MOV     [R8], R11                       ; tira o jogo da pausa
 
+    EI
+
     JMP     processo_controlos              ; volta ao início do ciclo
 
 mete_pausa:
@@ -590,6 +592,8 @@ mete_pausa:
 
     MOV     R11, 1                          ; 1 simboliza jogo pausado
     MOV     [R8], R11                       ; mete o jogo em pausa
+
+    DI
 
 espera_pausa:                               ; neste ciclo, espera-se até se tirar da pausa
     MOV     R0, [TECLA_CARREGADA]           ; lẽ uma tecla
