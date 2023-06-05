@@ -131,7 +131,7 @@ COLUNA_SONDA_ESQ            EQU 26          ; coluna onde a sonda que é lançad
 HORIZONTAL_ESQ              EQU -1          ; movimento horizontal da sonda que é lançada da esquerda
 
 COLUNA_SONDA_DIR            EQU 37          ; coluna onde a sonda que é lançada da direita começa
-HORIZONTAL_DIR              EQU 0          ; movimento horizontal da sonda que é lançada da direita
+HORIZONTAL_DIR              EQU 1           ; movimento horizontal da sonda que é lançada da direita
 
 ; Offsets
 OFF_COLUNA                  EQU 2           ; offset para obter a coluna de um objeto a partir do seu endereço
@@ -277,9 +277,9 @@ MOV_ASTEROIDE:                              ; movimentos do asteróide
     WORD    VERTICAL_1
 
 SONDAS:
-    WORD    OFF, MOVIMENTOS, ECRA_SONDA_ESQ                 ; sonda esquerda (ON/OFF), movimentos restantes
-    WORD    OFF, MOVIMENTOS, ECRA_SONDA_MEIO                 ; sonda do meio (ON/OFF), movimentos restantes
-    WORD    OFF, MOVIMENTOS, ECRA_SONDA_DIR                 ; sonda direita (ON/OFF), movimentos restantes
+    WORD    OFF, MOVIMENTOS, ECRA_SONDA_ESQ ; sonda esquerda (ON/OFF), movimentos restantes
+    WORD    OFF, MOVIMENTOS,ECRA_SONDA_MEIO ; sonda do meio (ON/OFF), movimentos restantes
+    WORD    OFF, MOVIMENTOS, ECRA_SONDA_DIR ; sonda direita (ON/OFF), movimentos restantes
 
 POS_SONDAS:
     WORD    LINHA_SONDA, COLUNA_SONDA_ESQ   ; posição da sonda esquerda (linha, coluna) 
@@ -441,7 +441,7 @@ sonda_esquerda:
 sonda_meio:
     ADD     R6, 6                           ; tabela da sonda do meio
     ADD     R0, 4                           ; posição da sonda do meio
-    ADD     R2, 4                           ; movimentos da sonda do meio
+    ADD     R2, 2                           ; movimentos da sonda do meio
     ADD     R1, 4                           ; definição da sonda do meio
 
     MOV     R8, COLUNA_SONDA_MEIO           ; coluna inicial da sonda do meio
@@ -451,7 +451,7 @@ sonda_meio:
 sonda_direita:    
     ADD     R6, 6                           ; tabela da sonda da direita
     ADD     R0, 4                           ; posição da sonda da direita
-    ADD     R2, 4                           ; movimentos da sonda da direita
+    ADD     R2, 2                           ; movimentos da sonda da direita
     ADD     R1, 4                           ; definição da sonda do meio
 
     MOV     R8, COLUNA_SONDA_DIR
@@ -521,6 +521,7 @@ reinicia_sonda:
     ADD     R4, 2                           ; coluna da sonda
     MOV     [R4], R8                        ; reinicia a coluna
     JMP     exit_verifica                   ; passa para a sonda seguinte
+
 ; ****************************************************************************
 ; Processo Controlos
 ; Descrição: Trata de pausar, tirar da pausa e terminar o jogo.
@@ -539,13 +540,77 @@ processo_controlos:
     CMP     R0, R1                          ; a tecla lida é o "D"?
     JZ      pausa                           ; se sim, pausa o jogo
 
+    MOV     R1, TECLA_ESQUERDA              ; tecla para lançar a sonda (0)
+    CMP     R0, R1                          ; a tecla lida é o "0"?
+    JZ      sonda_esquerda_controlo         ; se sim, cria a sonda
+
+    MOV     R1, TECLA_MEIO                  ; tecla para lançar a sonda (1)
+    CMP     R0, R1                          ; a tecla lida é o "1"?
+    JZ      sonda_meio_controlo             ; se sim, cria a sonda
+
+    MOV     R1, TECLA_DIREITA               ; tecla para lançar a sonda (2)
+    CMP     R0, R1                          ; a tecla lida é o "2"?
+    JZ      sonda_direita_controlo          ; se sim, cria a sonda
+
     JMP     processo_controlos              ; se não for nenhuma das teclas anteriores, repete o ciclo
 
-;sonda_esquerda_controlo:
-    ;MOV     R1, SONDAS
-    ;MOV     R2, MOV_SONDA
-    ;MOV     R3, DEF_SONDA
-    ;MOV     R4, POS_SONDA
+sonda_controlo_inicializações:
+    MOV     R1, SONDAS
+    MOV     R2, MOV_SONDA
+    MOV     R3, POS_SONDAS
+    RET
+
+sonda_esquerda_controlo:
+    CALL    sonda_controlo_inicializações
+    JMP     cria_sonda
+
+sonda_meio_controlo:
+    CALL    sonda_controlo_inicializações
+    ADD     R1, 6
+    ADD     R2, 2
+    ADD     R3, 4
+    JMP     cria_sonda
+
+sonda_direita_controlo:
+    CALL    sonda_controlo_inicializações
+    MOV     R4, 12
+    ADD     R1, R4                          ; 12 = 6 * 2
+
+    ADD     R2, 4
+
+    MOV     R4, 8
+    ADD     R3, R4
+    JMP     cria_sonda
+
+cria_sonda:
+    MOV     R4, [R1]                        ; copia a tabela das sondas
+    CMP     R4, ON                          ; a sonda já existe?
+    JZ     processo_controlos              ; se sim, volta ao processo de controlos
+
+    MOV     R4, ON                          ; simboliza sonda ligada
+    MOV     [R1], R4                        ; atualiza a tabela das sondas
+
+    MOV     R4, SOM_LASER                   ; endereço do som do laser
+    MOV     [DEFINE_SOM_OU_VIDEO], R4       ; seleciona o som
+    MOV     [INICIA_REPRODUCAO], R4         ; reproduz o som
+
+    ADD     R1, 4                           ; ecrã da sonda
+    MOV     R1, [R1]                        ; copia o ecrã da sonda
+    MOV     [SELECIONA_ECRA], R1
+
+    MOV     R6, COR_SONDA                   ; cor da sonda
+    MOV     R2, [R3]                        ; copia a linha da sonda
+    MOV     R3, [R3+2]                      ; copia a coluna da sonda
+
+    CALL    desenha_pixel                   ; desenha a sonda
+
+    MOV     R2, -5                          ; energia a perder com a sonda
+    CALL    altera_energia                  ; perde energia
+
+    JMP     processo_controlos
+
+
+    
     
 
 termina_jogo:
