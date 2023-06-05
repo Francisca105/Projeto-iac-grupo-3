@@ -46,6 +46,7 @@ CENARIO_MENU                EQU 0           ; número do cenário do fundo do me
 CENARIO_JOGO                EQU 1           ; número do cenário do fundo do jogo
 CENARIO_TERMINADO           EQU 2           ; número do cenário do fundo de quando se termina o jogo
 CENARIO_SEM_ENERGIA         EQU 3           ; número do cenário do fundo de quando se fica sem energia
+CENARIO_COLISAO             EQU 5           ; número do cenário do fundo de quando se perde por colisão com asteróide
 CENARIO_PAUSA               EQU 4           ; número do cenário frontal de quando se pausa o jogo
 
 SOM_TEMA                    EQU 0           ; número da música de fundo

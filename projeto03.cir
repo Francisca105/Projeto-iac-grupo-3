@@ -1531,7 +1531,7 @@
     "windowScreenWidthPixels" : 1024,
     "windowScreenHeightixels" : 512,
     "defaultPenColor" : 65280,
-    "image paths" : [ "media/start.png", "media/espaço.jpg", "media/terminado.png", "media/energia.png", "media/pausa.png" ],
+    "image paths" : [ "media/start.png", "media/espaço.jpg", "media/terminado.png", "media/energia.png", "media/pausa.png", "media/exploded.png" ],
     "sounds/videos settings" : [ {
       "filePathName" : "media/tema.wav",
       "relative sound volume" : 1.0,
