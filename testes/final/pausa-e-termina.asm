@@ -73,22 +73,15 @@ N_LINHAS                    EQU 32          ; número de linhas do ecrã (altura
 N_COLUNAS                   EQU 64          ; número de colunas do ecrã (largura)
 
 ; Ecrãs
-ECRA_0                      EQU 0
-ECRA_1                      EQU 1
-ECRA_2                      EQU 2
-ECRA_3                      EQU 3
-ECRA_4                      EQU 4
-ECRA_5                      EQU 5
-ECRA_6                      EQU 6
-ECRA_7                      EQU 7
-ECRA_8                      EQU 8
-ECRA_9                      EQU 9
-ECRA_10                     EQU 10
-ECRA_11                     EQU 11
-ECRA_12                     EQU 12
-ECRA_13                     EQU 13
-ECRA_14                     EQU 14
-ECRA_15                     EQU 15
+ECRA_NAVE                   EQU 0
+ECRA_SONDA_ESQ              EQU 1
+ECRA_SONDA_MEIO             EQU 2
+ECRA_SONDA_DIR              EQU 3
+;ECRA_4                      EQU 4
+ECRA_ASTEROIDE_1            EQU 5
+ECRA_ASTEROIDE_2            EQU 6
+ECRA_ASTEROIDE_3            EQU 7
+ECRA_ASTEROIDE_4            EQU 8
 
 ; Teclado
 LINHA_TECLADO               EQU 8           ; última linha (4ª linha, 1000b)
@@ -129,17 +122,15 @@ MOVIMENTOS                  EQU 12          ; número máximo de movimentos da s
 OFF                         EQU 0           ; sinaliza a sonda desligada
 ON                          EQU 1           ; sinaliza a sonda ligada
 VERTICAL_MOV                EQU -1          ; movimento vertical da sonda
+LINHA_SONDA             EQU 26              ; linha onde a sonda que começa
 
-LINHA_SONDA_MEIO            EQU 26          ; linha onde a sonda que é lançada do meio começa
 COLUNA_SONDA_MEIO           EQU 32          ; coluna onde a sonda que é lançada do meio começa
 HORIZONTAL_MEIO             EQU 0           ; movimento horizontal da sonda que é lançada do meio 
 
-LINHA_SONDA_ESQ             EQU 26          ; linha onde a sonda que é lançada da esquerda começa
-COLUNA_SONDA_ESQ            EQU 32          ; coluna onde a sonda que é lançada da esquerda começa
+COLUNA_SONDA_ESQ            EQU 26          ; coluna onde a sonda que é lançada da esquerda começa
 HORIZONTAL_ESQ              EQU -1          ; movimento horizontal da sonda que é lançada da esquerda
 
-LINHA_SONDA_DIR             EQU 26          ; linha onde a sonda que é lançada da direita começa
-COLUNA_SONDA_DIR            EQU 32          ; coluna onde a sonda que é lançada da direita começa
+COLUNA_SONDA_DIR            EQU 37          ; coluna onde a sonda que é lançada da direita começa
 HORIZONTAL_DIR              EQU -1          ; movimento horizontal da sonda que é lançada da direita
 
 ; Offsets
@@ -172,6 +163,9 @@ SP_energia:                                 ; valor incial para o SP do processo
 
 STACK       100H                            ; espaço reservado para a pilha do processo nave
 SP_nave:                                    ; valor inicial para o SP do processo nave
+
+STACK       100H                            
+processo_sonda_ciclo:
 
 
 ; ****************************************************************************
@@ -245,14 +239,14 @@ ENERGIA:                                    ; energia atual da nave
 POS_NAVE:                                   ; posição da nave
     WORD    LINHA_NAVE
     WORD    COLUNA_NAVE
-
-DEF_NAVE:                                   ; definição da nave
+    
+DEF_NAVE:
     WORD    LARGURA_15
     WORD    ALTURA_5
     WORD    0, 0, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, 0, 0
     WORD    0, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, 0
-    WORD    CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO
-    WORD    CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO
+    WORD    CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, AZUL, VERMELHO, VERDE, CINZA_MEDIO, VERMELHO, VERDE, CINZA_MEDIO, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO
+    WORD    CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, CINZA_MEDIO, CINZA_MEDIO, AZUL, AZUL, VERDE, CINZA_MEDIO, VERMELHO, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO
     WORD    CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO
 
 POS_PAINEL:                                 ; posição do painel de instrumentos
@@ -283,14 +277,14 @@ MOV_ASTEROIDE:                              ; movimentos do asteróide
     WORD    VERTICAL_1
 
 SONDAS:
-    WORD    OFF, MOVIMENTOS                 ; sonda esquerda (ON/OFF), movimentos restantes
-    WORD    OFF, MOVIMENTOS                 ; sonda do meio (ON/OFF), movimentos restantes
-    WORD    OFF, MOVIMENTOS                 ; sonda direita (ON/OFF), movimentos restantes
+    WORD    OFF, MOVIMENTOS, ECRA_SONDA_ESQ                 ; sonda esquerda (ON/OFF), movimentos restantes
+    WORD    OFF, MOVIMENTOS, ECRA_SONDA_MEIO                 ; sonda do meio (ON/OFF), movimentos restantes
+    WORD    OFF, MOVIMENTOS, ECRA_SONDA_DIR                 ; sonda direita (ON/OFF), movimentos restantes
 
 POS_SONDAS:
-    WORD    0, 0                            ; posição da sonda esquerda (linha, coluna) 
-    WORD    0, 0                            ; posição da sonda do meio (linha, coluna)
-    WORD    0, 0                            ; posição da sonda direita (linha, coluna)
+    WORD    LINHA_SONDA, COLUNA_SONDA_ESQ   ; posição da sonda esquerda (linha, coluna) 
+    WORD    LINHA_SONDA, COLUNA_SONDA_MEIO  ; posição da sonda do meio (linha, coluna)
+    WORD    LINHA_SONDA, COLUNA_SONDA_DIR   ; posição da sonda direita (linha, coluna)
 
 MOV_SONDA:
     WORD    HORIZONTAL_ESQ                  ; movimento horizontal da sonda esquerda
@@ -316,7 +310,7 @@ REINICIA_JOGO:                              ; LOCK para reiniciar o jogo
 
 tab_int:                                    ; tabela das rotinas de interrupção
     WORD    0
-    WORD    0
+    WORD    sondas_int
     WORD    energia_int
     WORD    nave_int
 
@@ -403,6 +397,9 @@ start:
     MOV     R1, DEF_NAVE                    ; protótipo da nave
     CALL    desenha_objeto                  ; desenha a nave
 
+    CALL    cria_sonda
+    CALL    sonda_ciclo_start
+
 main:
     YIELD
     MOV     R1, [REINICIA_JOGO]             ; espera até poder reiniciar o jogo (o valor do registo é irrelevante)
@@ -411,12 +408,125 @@ main:
 
     JMP     main
 
+cria_sonda:
+    MOV     R11, SOM_LASER                  ; endereço do som do laser
+    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona o som
+    MOV     [INICIA_REPRODUCAO], R11        ; reproduz o som
 
+    PUSH    R0
+    PUSH    R2
+    PUSH    R3
+    PUSH    R6
+    PUSH    R11
+
+    MOV     R0, POS_SONDAS
+    ADD     R0, 4
+    ADD     R0, 4
+    MOV     R2, R0
+    MOV     R2, [R2]
+    MOV     R3, R0
+    ADD     R3, 2
+    MOV     R3, [R3]
+    MOV     R6, COR_SONDA
+
+    CALL    desenha_pixel
+
+    MOV     R11, ON
+    MOV     R0, R11
+    
+    POP    R11
+    POP     R6
+    POP     R3
+    POP     R2
+    POP     R0
+
+
+    RET
 
 ; **********
 ; PROCESSOS
 ; **********
+PROCESS processo_sonda_ciclo
 
+sonda_ciclo_start:
+    MOV     R6, SONDAS                      ; tabela das sondas
+    MOV     R0, POS_SONDAS                  ; posição das sondas
+    MOV     R2, MOV_SONDA                   ; movimentos das sondas
+    MOV     R3, DEF_SONDA                   ; definição da sonda
+    
+
+    MOV     R10, evento_int                 ; tabela das ocorrências das interrupções
+    MOV     R11, [R10+2]                    ; ocorrência da interrupção 1
+
+    MOV     R9, PAUSA                       ; endereço do estado atual do jogo
+    MOV     R9, [R9]                        ; estado atual do jogo
+    CMP     R9, 1                           ; o jogo está pausado?
+    
+    JZ      sonda_ciclo_start               ; se sim, rpete o ciclo
+
+sonda_esquerda:
+    MOV     R8, COLUNA_SONDA_ESQ            ; coluna inicial da sonda esquerda
+
+    CALL    move_sonda                      ; move a sonda
+
+sonda_meio:
+    ADD     R6, 6                           ; tabela da sonda do meio
+    ADD     R0, 4                           ; posição da sonda do meio
+    ADD     R2, 4                           ; movimentos da sonda do meio
+    ADD     R1, 4                           ; definição da sonda do meio
+
+    MOV     R8, COLUNA_SONDA_MEIO           ; coluna inicial da sonda do meio
+    
+    CALL    move_sonda                      ; move a sonda
+
+sonda_direita:
+    ADD     R6, 6                           ; tabela da sonda da direita
+    ADD     R0, 4                           ; posição da sonda da direita
+    ADD     R2, 4                           ; movimentos da sonda da direita
+    ADD     R1, 4                           ; definição da sonda do meio
+
+    MOV     R8, COLUNA_SONDA_DIR
+
+    CALL    move_sonda
+    CALL    sonda_ciclo_start
+    
+move_sonda:
+    MOV     R4, [R6]                          ; copia a tabela das sondas
+    ;MOV     R4, [R4]                        ; indicação se a sonda já existe
+
+    CMP     R4, ON                          ; a sonda já existe?
+    JNZ     exit_verifica                   ; se sim, passa para a sonda seguinte
+
+    MOV     R4, [R6+2]                      ; endereço do nº de movimentos do asteróide
+    MOV     R5, MOVIMENTOS
+    CMP     R4, R5                          ; já realizou o nº máximo de movimentos?
+    JZ      reinicia_sonda                  ; se sim, reinicia a sonda
+    
+    MOV     R5, [R6+4]                      ; ecrã da sonda
+    MOV     [SELECIONA_ECRA], R5            ; seleciona o ecrã da respetiva sonda
+
+    MOV     R7, [R6+2]
+    ADD     R7, -1
+    MOV     [R6+2], R7                       ; tira um movimento da sonda
+
+    CALL    move_objeto
+    RET
+
+
+exit_verifica:
+    RET
+
+reinicia_sonda:
+    MOV     R5, OFF
+    MOV     [R6], R5                        ; simboliza sonda desligada
+    MOV     R4, R0                          ; posição da sonda
+    
+    MOV     R5, LINHA_SONDA
+    MOV     [R4], R5               ; reinicia a linha
+    
+    ADD     R4, 2                           ; coluna da sonda
+    MOV     [R4], R8                        ; reinicia a coluna
+    JMP     exit_verifica                   ; passa para a sonda seguinte
 ; ****************************************************************************
 ; Processo Controlos
 ; Descrição: Trata de pausar, tirar da pausa e terminar o jogo.
@@ -644,7 +754,6 @@ ha_tecla:									; neste ciclo espera-se até NENHUMA tecla estar premida
 	JMP		espera_tecla					; repete o ciclo
 
 
-
 ; ****************************************************************************
 ; Processo Energia
 ; Descrição: Decrementa a energia da nave em 3% a cada 3 segundos.
@@ -806,6 +915,22 @@ desenha_painel:
 ; ****************************************************************************
 
 ; ****************************************************************************
+; sondas_int
+; Descrição: Trata a interrupção do temporizador 1.
+;            Move as sondas em jogo.
+; ****************************************************************************
+
+sondas_int:
+	PUSH R0
+
+	MOV  R0, evento_int			            ; tabela das ocorrências de interrupções
+                                            ; desbloqueia processo energia (qualquer registo serve)
+	MOV  [R0+2], R1		                    ; na componente 1 da variável evento_int
+						                    ; Usa-se 4 porque cada word tem 2 bytes
+	POP  R0
+	RFE
+
+; ****************************************************************************
 ; energia_int
 ; Descrição: Trata a interrupção do temporizador 2.
 ;            Num ciclo de 3 em 3 segundos baixa a energia em 3%.
@@ -965,3 +1090,4 @@ informacoes_objeto:
 
     POP     R1
     RET
+
