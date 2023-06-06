@@ -348,7 +348,7 @@ inicio:
     MOV     [R0], R1                        ; inicia a energia com o valor 0
     CALL    display                         ; mostra o nível de energia na nave
 
-;    EI0                                     ; permite a interrupção 0
+    EI0                                     ; permite a interrupção 0
     EI1                                     ; permite a interrupção 1
     EI2                                     ; permite a interrupção 2
     EI3                                     ; permite a interrupção 3
@@ -396,7 +396,7 @@ start:
     MOV     R0, POS_NAVE                    ; coordenadas da nave
     MOV     R1, DEF_NAVE                    ; protótipo da nave
     CALL    desenha_objeto                  ; desenha a nave
-    CALL    sonda_ciclo_start
+    CALL    processo_sonda
     
 
 main:
@@ -412,26 +412,26 @@ main:
 ; **********
 PROCESS processo_sonda_ciclo
 
-sonda_ciclo_start:
-    YIELD
+processo_sonda:
+    MOV     R10, evento_int                 ; tabela das ocorrências das interrupções
+    MOV     R11, [R10+2]                    ; ocorrência da interrupção 1
+
+    MOV     R9, PAUSA                       ; endereço do estado atual do jogo
+    MOV     R9, [R9]                        ; estado atual do jogo
+    CMP     R9, 1                           ; o jogo está pausado?
+
     MOV     R6, SONDAS                      ; tabela das sondas
     MOV     R0, POS_SONDAS                  ; posição das sondas
     MOV     R2, MOV_SONDA                   ; movimentos das sondas
     MOV     R1, DEF_SONDA                   ; definição da sonda
     
 
-    MOV     R10, evento_int                 ; tabela das ocorrências das interrupções
-    MOV     R11, [R10+2]                    ; ocorrência da interrupção 1
     ;CMP     R11, 1
-    ;JNZ     sonda_ciclo_start
+    ;JNZ     processo_sonda
     MOV     R11, 0
     MOV     [R10+2], R11
-
-    MOV     R9, PAUSA                       ; endereço do estado atual do jogo
-    MOV     R9, [R9]                        ; estado atual do jogo
-    CMP     R9, 1                           ; o jogo está pausado?
     
-    JZ      sonda_ciclo_start               ; se sim, repete o ciclo
+    JZ      processo_sonda               ; se sim, repete o ciclo
 
 sonda_esquerda:
     MOV     R8, COLUNA_SONDA_ESQ            ; coluna inicial da sonda esquerda
@@ -457,7 +457,7 @@ sonda_direita:
     MOV     R8, COLUNA_SONDA_DIR
 
     CALL    verifica_sonda
-    JMP     sonda_ciclo_start
+    JMP     processo_sonda
     
 verifica_sonda:
     MOV     R4, [R6]                          ; copia a tabela das sondas

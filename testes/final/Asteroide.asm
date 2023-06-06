@@ -74,7 +74,7 @@ N_LINHAS                    EQU 32          ; número de linhas do ecrã (altura
 N_COLUNAS                   EQU 64          ; número de colunas do ecrã (largura)
 
 ; Ecrãs
-ECRA_NAVE                   EQU 0
+ECRA_NAVE                   EQU 8
 ECRA_SONDA_ESQ              EQU 1
 ECRA_SONDA_MEIO             EQU 2
 ECRA_SONDA_DIR              EQU 3
@@ -82,7 +82,7 @@ ECRA_SONDA_DIR              EQU 3
 ECRA_ASTEROIDE_1            EQU 5
 ECRA_ASTEROIDE_2            EQU 6
 ECRA_ASTEROIDE_3            EQU 7
-ECRA_ASTEROIDE_4            EQU 8
+ECRA_ASTEROIDE_4            EQU 1
 
 ; Teclado
 LINHA_TECLADO               EQU 8           ; última linha (4ª linha, 1000b)
@@ -249,8 +249,8 @@ DEF_NAVE:                                   ; definição da nave
     WORD    ALTURA_5
     WORD    0, 0, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, CINZA_ESCURO, 0, 0
     WORD    0, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, 0
-    WORD    CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO
-    WORD    CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO
+    WORD    CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, 0, 0, 0, 0, 0, 0, 0, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO
+    WORD    CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO, 0, 0, 0, 0, 0, 0, 0, CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO
     WORD    CINZA_ESCURO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_CLARO, CINZA_ESCURO
 
 POS_PAINEL:                                 ; posição do painel de instrumentos
@@ -409,6 +409,7 @@ menu:
 
     CALL    processo_energia                ; inicia o processo energia
     CALL    processo_nave                   ; inicia o processo nave
+    CALL    processo_sonda
     CALL    processo_asteroides             ; inicia o processo asteroides
     CALL    processo_controlos              ; incia o processo controlos
 
@@ -455,7 +456,9 @@ reinicia_variaveis_asteroides:
 ciclo_reiniciar_asteroides:
     MOV     R4, R1                          ; copia o número do asteróide
 
-    SHL     R4, 3                           ; multiplica por 8
+    MOV     R11, 8
+    MUL     R4, R11                         ; multiplica por 8
+
     MOV     R3, R0
     ADD     R3, R4                          ; vai para o asteroide que pretendemos
 
@@ -516,7 +519,9 @@ processo_asteroides:
     JZ      processo_asteroides             ; se o jogo estiver pausado volta ao começo do ciclo
 
 ciclo_asteroide:
-    CMP     R0, MAX_ASTEROIDES              ; chegou ao ultimo asteróide (?)
+;    CMP     R0, MAX_ASTEROIDES              ; chegou ao ultimo asteróide (?)
+    CMP     R0, 1
+
     JZ      processo_asteroides             ; reinicia o processo
 
     CALL    testa_limites
@@ -550,28 +555,6 @@ coloca_asteroide:
 termina_processo_asteroides:
     RET
 
-
-;    CMP     R2, 1
-;    JNZ     ciclo_asteroide
-;    MOV     R2, 0
-;    MOV     [R1], R2                          ; o jogo está pausado?
-;    JZ      ciclo_asteroide                 ; se sim, repete o ciclo
-
-;ciclo_move_asteroide:
-;    CMP     R0, MAX_ASTEROIDES              ; já moveu todos os asteróides
-;    JZ      ciclo_asteroide                 ; se sim, volta ao ciclo principal
-;    MOV     R7, [R1+4]                      ; lê o estado do asteroide
-;    CMP     R7, ON                          ; o asteróide está "ON" (?)
-;    JZ      move_asteroide                  ; move o asteróide
-;    CALL    coloca_topo
-;exit_reinicia_asteroide:
-;    ADD     R0, 1                           ; asteróide seguinte
-;    JMP     ciclo_move_asteroide            ; repete o ciclo
-;
-;reinicia_asteroide:
-;    CALL    move_asteroide
-;    JMP     exit_reinicia_asteroide
-;
 ; ****************************************************************************
 ; COLOCA_TOPO
 ; Descrição: Coloca um asteróide "aleatoriamente" numa das 5 posições do topo.
@@ -592,10 +575,10 @@ coloca_topo:
     MUL     R5, R6                          ; multiplicamos por 8 (4 words)
 
     SHL     R0, 2                           ; valor a adicionar (nº do asteróide)
-    ;ADD     R0, 2                           ; offset porque a tabela dos asteróides tem 3 variáveis
+
     MOV     R1, ASTEROIDES                  ; tabela dos asteróides
     ADD     R1, R5                          ; asteróide a tratar
-;    SUB     R0, 2                           ; offset porque as restantes tabelas dos asteróides têm apenas 4 asteróides
+
     MOV     R3, [R1]                        ; ecrã do asteróide
     MOV     [SELECIONA_ECRA], R3            ; seleciona o ecrã  
 
@@ -750,9 +733,10 @@ testa_limites:
     SHL     R1, 2                           ; multiplica por 4
     MOV     R3, POS_AST
     ADD     R3, R1
-    MOV     R2, [R3]                ; linha do asteróide
-                         
-    SHL     R0, 3                           ; multiplicamos por 8 (4 words)
+    MOV     R2, [R3]                        ; linha do asteróide
+
+    MOV     R11, 8
+    MUL     R0, R11                         ; multiplicamos o número de asteróides por 8
     
     MOV     R1, ASTEROIDES                  ; tabela dos asteróides
     ADD     R1, R0                          ; asteróide a testar
@@ -797,8 +781,8 @@ muda_linha_limite:
     JMP     testa_limites_continuacao
 
 termina_jogo_asteroide:
-    CALL    game_over_colisao
-    MOV     R7, 1
+    ;CALL    game_over_colisao
+    ;MOV     R7, 1
     JMP     exit_testa_limites
 
 PROCESS SP_controlos
@@ -814,74 +798,78 @@ processo_controlos:
     CMP     R0, R1                          ; a tecla lida é o "D"?
     JZ      pausa                           ; se sim, pausa o jogo
 
-;    MOV     R1, TECLA_ESQUERDA              ; tecla para lançar a sonda (0)
-;    CMP     R0, R1                          ; a tecla lida é o "0"?
-;    JZ      sonda_esquerda_controlo         ; se sim, cria a sonda
-;
-;    MOV     R1, TECLA_MEIO                  ; tecla para lançar a sonda (1)
-;    CMP     R0, R1                          ; a tecla lida é o "1"?
-;    JZ      sonda_meio_controlo             ; se sim, cria a sonda
-;
-;    MOV     R1, TECLA_DIREITA               ; tecla para lançar a sonda (2)
-;    CMP     R0, R1                          ; a tecla lida é o "2"?
-;    JZ      sonda_direita_controlo          ; se sim, cria a sonda
+    MOV     R1, TECLA_ESQUERDA              ; tecla para lançar a sonda (0)
+    CMP     R0, R1                          ; a tecla lida é o "0"?
+    JZ      sonda_esquerda_controlo         ; se sim, cria a sonda
+
+    MOV     R1, TECLA_MEIO                  ; tecla para lançar a sonda (1)
+    CMP     R0, R1                          ; a tecla lida é o "1"?
+    JZ      sonda_meio_controlo             ; se sim, cria a sonda
+
+    MOV     R1, TECLA_DIREITA               ; tecla para lançar a sonda (2)
+    CMP     R0, R1                          ; a tecla lida é o "2"?
+    JZ      sonda_direita_controlo          ; se sim, cria a sonda
 
     JMP     processo_controlos              ; se não for nenhuma das teclas anteriores, repete o ciclo
 
-;sonda_controlo_inicializações:
-;    MOV     R1, SONDAS
-;    MOV     R2, MOV_SONDA
-;    MOV     R3, POS_SONDAS
-;    RET
-;
-;sonda_esquerda_controlo:
-;    CALL    sonda_controlo_inicializações
-;    JMP     cria_sonda
-;
-;sonda_meio_controlo:
-;    CALL    sonda_controlo_inicializações
-;    ADD     R1, 6
-;    ADD     R2, 2
-;    ADD     R3, 4
-;    JMP     cria_sonda
-;
-;sonda_direita_controlo:
-;    CALL    sonda_controlo_inicializações
-;    MOV     R4, 12
-;    ADD     R1, R4                          ; 12 = 6 * 2
-;
-;    ADD     R2, 4
-;
-;    MOV     R4, 8
-;    ADD     R3, R4
-;    JMP     cria_sonda
-;
-;cria_sonda:
-;    MOV     R4, [R1]                        ; copia a tabela das sondas
-;    CMP     R4, ON                          ; a sonda já existe?
-;    JZ     processo_controlos              ; se sim, volta ao processo de controlos
-;
-;    MOV     R4, ON                          ; simboliza sonda ligada
-;    MOV     [R1], R4                        ; atualiza a tabela das sondas
-;
-;    MOV     R4, SOM_LASER                   ; endereço do som do laser
-;    MOV     [DEFINE_SOM_OU_VIDEO], R4       ; seleciona o som
-;    MOV     [INICIA_REPRODUCAO], R4         ; reproduz o som
-;
-;    ADD     R1, 4                           ; ecrã da sonda
-;    MOV     R1, [R1]                        ; copia o ecrã da sonda
-;    MOV     [SELECIONA_ECRA], R1
-;
-;    MOV     R6, COR_SONDA                   ; cor da sonda
-;    MOV     R2, [R3]                        ; copia a linha da sonda
-;    MOV     R3, [R3+2]                      ; copia a coluna da sonda
-;
-;    CALL    desenha_pixel                   ; desenha a sonda
-;
-;    MOV     R2, -5                          ; energia a perder com a sonda
-;    CALL    altera_energia                  ; perde energia
-;
-;    JMP     processo_controlos
+sonda_controlo_inicializações:
+    MOV     R1, SONDAS
+    MOV     R2, MOV_SONDA
+    MOV     R3, POS_SONDAS
+    RET
+
+sonda_esquerda_controlo:
+    CALL    sonda_controlo_inicializações
+    JMP     cria_sonda
+
+sonda_meio_controlo:
+    CALL    sonda_controlo_inicializações
+    ADD     R1, 6
+    ADD     R2, 2
+    ADD     R3, 4
+    JMP     cria_sonda
+
+sonda_direita_controlo:
+    CALL    sonda_controlo_inicializações
+    MOV     R4, 12
+    ADD     R1, R4                          ; 12 = 6 * 2
+
+    ADD     R2, 4
+
+    MOV     R4, 8
+    ADD     R3, R4
+    JMP     cria_sonda
+
+cria_sonda:
+    MOV     R4, [R1]                        ; copia a tabela das sondas
+    CMP     R4, ON                          ; a sonda já existe?
+    JZ     processo_controlos              ; se sim, volta ao processo de controlos
+
+    MOV     R4, ON                          ; simboliza sonda ligada
+    MOV     [R1], R4                        ; atualiza a tabela das sondas
+
+    MOV     R4, MOVIMENTOS
+    MOV     [R1+2], R4
+
+    MOV     R4, SOM_LASER                   ; endereço do som do laser
+    MOV     [DEFINE_SOM_OU_VIDEO], R4       ; seleciona o som
+    MOV     [INICIA_REPRODUCAO], R4         ; reproduz o som
+
+    ADD     R1, 4                           ; ecrã da sonda
+    MOV     R1, [R1]                        ; copia o ecrã da sonda
+    MOV     [SELECIONA_ECRA], R1
+
+    MOV     R6, COR_SONDA                   ; cor da sonda
+    MOV     R2, [R3]                        ; copia a linha da sonda
+    MOV     R3, [R3+2]                      ; copia a coluna da sonda
+
+    CALL    desenha_pixel                   ; desenha a sonda
+
+    MOV     R2, -5                          ; energia a perder com a sonda
+    CALL    altera_energia                  ; perde energia
+
+    JMP     processo_controlos
+
 
 termina_jogo:
     CALL    game_over_terminado             ; termina o jogo
@@ -1013,10 +1001,6 @@ game_over:                                  ; termina o jogo
     MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona a música de fundo
     MOV     [TERMINA_SOM_OU_VIDEO], R1      ; termina a música de fundo
 
-    ;MOV     R0, SONDA                       ; endereço da tabela relativa à sonda
-    ;ADD     R0, 2                           ; endereço da variável que guarda o nº de movimentos realizados
-    ;CALL    reinicia_sonda                  ; reinicia a sonda
-    ;CALL    reinicia_asteroide              ; reinicia o asteróide
     MOV     [APAGA_ECRAS], R0	            ; apaga todos os pixels já desenhados (o valor de R1 não é relevante)
 
     MOV     R0, SOM_GAMEOVER                ; endereço do som de game over
@@ -1037,7 +1021,188 @@ game_over_ciclo:
     POP     R0
     RET
 
+PROCESS SP_sondas
 
+processo_sonda:
+    MOV     R10, evento_int                 ; tabela das ocorrências das interrupções
+    MOV     R11, [R10+2]                    ; ocorrência da interrupção 1
+
+    MOV     R9, PAUSA                       ; endereço do estado atual do jogo
+    MOV     R9, [R9]                        ; estado atual do jogo
+    CMP     R9, 1                           ; o jogo está pausado?
+
+    MOV     R6, SONDAS                      ; tabela das sondas
+    MOV     R0, POS_SONDAS                  ; posição das sondas
+    MOV     R2, MOV_SONDA                   ; movimentos das sondas
+    MOV     R1, DEF_SONDA                   ; definição da sonda
+
+    MOV     R11, 0
+    MOV     [R10+2], R11
+    
+    JZ      processo_sonda               ; se sim, repete o ciclo
+
+sonda_esquerda:
+    MOV     R8, COLUNA_SONDA_ESQ            ; coluna inicial da sonda esquerda
+
+    CALL    verifica_sonda                      ; move a sonda
+
+sonda_meio:
+    ADD     R6, 6                           ; tabela da sonda do meio
+    ADD     R0, 4                           ; posição da sonda do meio
+    ADD     R2, 2                           ; movimentos da sonda do meio
+    ADD     R1, 4                           ; definição da sonda do meio
+
+    MOV     R8, COLUNA_SONDA_MEIO           ; coluna inicial da sonda do meio
+    
+    CALL    verifica_sonda                      ; move a sonda
+
+sonda_direita:    
+    ADD     R6, 6                           ; tabela da sonda da direita
+    ADD     R0, 4                           ; posição da sonda da direita
+    ADD     R2, 2                           ; movimentos da sonda da direita
+    ADD     R1, 4                           ; definição da sonda do meio
+
+    MOV     R8, COLUNA_SONDA_DIR
+
+    CALL    verifica_sonda
+    JMP     processo_sonda
+    
+verifica_sonda:
+    MOV     R4, [R6]                        ; copia a tabela das sondas
+
+    CMP     R4, ON                          ; a sonda já existe?
+    JNZ     exit_verifica                   ; se não, passa para a sonda seguinte
+
+    MOV     R5, MOVIMENTOS
+    MOV     R5, [R6+4]                      ; ecrã da sonda
+    MOV     [SELECIONA_ECRA], R5            ; seleciona o ecrã da respetiva sonda
+    MOV     [APAGA_ECRA], R5
+
+    MOV     R4, [R6+2]                      ; endereço do nº de movimentos do asteróide
+    CMP     R4, 0                           ; já realizou o nº máximo de movimentos?
+    JZ      reinicia_sonda                  ; se sim, reinicia a sonda
+    
+    MOV     R7, [R6+2]
+    SUB     R7, 1
+    MOV     [R6+2], R7                       ; tira um movimento da sonda
+
+
+move_sonda:
+    PUSH    R2
+    PUSH    R3
+    PUSH    R6
+    PUSH    R4
+
+    MOV     R4, R2
+
+    MOV     R2, [R0]                        ; lê a linha da sonda
+    MOV     R5, [R4]                        ; lê o número do movimento horizontal
+    ADD     R2, -1                          ; tira uma linha (movimento de subida)
+    MOV     R3, [R0+2]                      ; lê a coluna
+    ADD     R3, R5                          ; acrescenta o movimento ao número da coluna
+    MOV     R7, R6
+    MOV     R6, COR_SONDA
+
+    CALL    desenha_pixel
+
+    MOV     R6, R7
+
+    MOV     [R0], R2                        ; atualiza a linha
+    MOV     [R0+2], R3                      ; atualiza a coluna
+    
+    CALL    testa_colisao_sonda
+    
+    POP     R4
+    POP     R6
+    POP     R3
+    POP     R2
+
+    ; R0 - pos
+
+    RET
+
+
+exit_verifica:
+    RET
+    
+
+reinicia_sonda:
+    MOV     R5, OFF                       
+    MOV     [R6], R5                        ; simboliza sonda desligada
+    MOV     R4, R0                          ; posição da sonda
+    
+    MOV     R5, LINHA_SONDA
+    MOV     [R4], R5                        ; reinicia a linha
+    
+    ADD     R4, 2                           ; coluna da sonda
+    MOV     [R4], R8                        ; reinicia a coluna
+    JMP     exit_verifica                   ; passa para a sonda seguinte
+
+
+; ****************************************************************************
+; testa_colisao_sonda
+; Descrição: 
+; Entradas:  R0 - tabela posição sonda atual
+;            R6 - sonda atual da tabela das sondas
+; Saídas:    -------------------
+; ****************************************************************************
+
+testa_colisao_sonda:
+    PUSH    R1
+    PUSH    R2
+    PUSH    R3
+    PUSH    R4
+    PUSH    R5
+    PUSH    R6
+    
+    MOV     R1, 0
+    MOV     R2, POS_AST
+
+ciclo_testa_asteroide:
+;    CMP     R1, MAX_ASTEROIDES
+    CMP     R1, 1
+
+    JZ      exit_testa_colisao_sonda
+    MOV     R5, R1
+    SHL     R5, 2                           ; multiplica por 4
+    ADD     R2, R5                          ; vai buscar a linha da tabela do asteróide atual
+
+    MOV     R4, [R0]                        ; linha da sonda
+    MOV     R3, [R2]                        ; linha do asteróide
+
+    CMP     R3, R4                          ; a linha superior do asteróide está abaixo (?)
+    JGT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
+
+    ADD     R3, ALTURA_5                    ; adiciona a altura
+    CMP     R3, R4                          ; a linha inferior do asteróide está acima da sonda (?)
+    JLT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
+    
+    MOV     R4, [R0+2]                      ; coluna da sonda
+    MOV     R3, [R2+2]                      ; coluna do asteróide
+
+    CMP     R3, R4                          ; a coluna esquerda do asteróide está à direita (?)
+    JGT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
+
+    ADD     R3, LARGURA_5                   ; adiciona a largura
+    CMP     R3, R4                          ; a coluna direita do asteróide está à esquerda da sonda (?)
+    JLT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
+
+    MOV     R7, 1000
+    
+proximo_ciclo:
+    ADD     R1, 1
+    JMP     ciclo_testa_asteroide
+    
+
+exit_testa_colisao_sonda:
+    POP     R6
+    POP     R5
+    POP     R4
+    POP     R3
+    POP     R2
+    POP     R1
+
+    RET
 
 ; ****************************************************************************
 ; Processo Teclado
@@ -1244,9 +1409,6 @@ processo_nave:
     CMP     R5, 1                           ; o jogo está pausado?
     JZ      processo_nave                   ; se sim, repete o ciclo
 
-    MOV     R1, ECRA_NAVE
-    MOV     [SELECIONA_ECRA], R1
-
     MOV     R2, PAINEL                      ; endereço da variável que guarda o nº do painel atual
     MOV     R4, [R2]                        ; número do painel atual
     ROL     R4, 2                           ; passa ao painel seguinte
@@ -1255,6 +1417,10 @@ processo_nave:
 
 loop:                                       ; calcula em que painel está
     CMP     R4, 1H                          ; chegou ao fim?
+
+    MOV     R1, ECRA_NAVE
+    MOV     [SELECIONA_ECRA], R1
+
     JZ      desenha_painel                  ; se sim, desenha o novo painel
     ROR     R4, 2                           ; roda os bits do painel em 2 posições
     ADD     R2, 2                           ; endereço do próximo painel (2 porque cada painel é uma word)
@@ -1455,6 +1621,3 @@ informacoes_objeto:
 
     POP     R1
     RET
-
-
-
