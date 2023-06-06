@@ -6,12 +6,12 @@
 
 ##### A fazer:
 
-- Sondas diagonais
-- Sondas a mexer com interrupções
-- Asteroides mineráveis
-- Asteroides com diferentes movimentos
-- Asteroide a mexer com interrupções
-- Gerador de asteroides
+- ~~Sondas diagonais~~
+- ~~Sondas a mexer com interrupções~~
+- ~~Asteroides mineráveis~~
+- ~~Asteroides com diferentes movimentos~~
+- ~~Asteroide a mexer com interrupções~~
+- ~~Gerador de asteroides~~
 - Colisões
 - ~~Interrupção para baixar a energia~~
 - ~~Não meter energia abaixo de 0~~
@@ -24,15 +24,15 @@
 - ~~Controlo~~
 - ~~Nave~~
 - ~~Energia~~
-- Sonda
-- Asteroide
+- ~~Sonda~~
+- ~~Asteroide~~
 
 ###### Pausa:
 
 - ~~Nave~~
 - ~~Energia~~
-- Sonda
-- Asteroide
+- ~~Sonda~~
+- ~~Asteroide~~
 
 ---
 
