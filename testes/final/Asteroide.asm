@@ -55,6 +55,7 @@ SOM_GAMEOVER                EQU 3           ; número do som quando se perde o j
 SOM_ASTEROIDE_DESCE         EQU 4           ; número do som quando o asteróide desce
 SOM_TEMA_PAUSA              EQU 5           ; número da música de fundo quando se pausa o jogo
 SOM_TEMA_JOGO               EQU 6           ; número da música de fundo que toca ao longo do jogo
+SOM_PAUSA_EFFECT            EQU 7           ; número do som de efeito da pausa
 
 ; Cores
 COR_SONDA                   EQU 0FF00H
@@ -111,7 +112,8 @@ ALTURA_2                    EQU 2           ; altura do painel
 LARGURA_5                   EQU 5           ; largura do asteróide
 AST_MAU                     EQU 0           ; simboliza um asteróide mau
 AST_BOM                     EQU 1           ; simboliza um asteróide bom
-NUM_ASTEROIDES              EQU 0           ; número de asteróides concurrentes
+MAX_ASTEROIDES              EQU 4           ; número máximo de asteróides concurrentes
+LINHA_MAX                   EQU 32          ; linha fora do ecrã
 
 ; Sonda
 LARGURA_1                   EQU 1           ; largura da sonda
@@ -268,10 +270,10 @@ POSSIVEIS_AST:                              ; coluna inicial e movimento horizon
     WORD    59, -1
 
 ASTEROIDES:                                 ; ecrã e tipo do asteróide
-    WORD    7, 0
-    WORD    8, 0
-    WORD    9, 0
-    WORD    10, 0
+    WORD    ECRA_ASTEROIDE_1, 0, OFF
+    WORD    ECRA_ASTEROIDE_2, 0, OFF
+    WORD    ECRA_ASTEROIDE_3, 0, OFF
+    WORD    ECRA_ASTEROIDE_4, 0, OFF
 
 POS_AST:                                    ; linha e coluna do asteróide
     WORD    0, 0
@@ -295,14 +297,32 @@ DEF_ASTEROIDE_BOM:                          ; definição do asteróide "bom" (m
     WORD    VERDE, VERDE, VERDE, VERDE, VERDE
     WORD    0, VERDE, VERDE, VERDE , 0
 
+DEF_ASTEROIDE_BOM_EXPLOSAO:                          ; definição do asteróide "bom" ao colidir (minerável)
+    WORD    LARGURA_5
+    WORD    ALTURA_5
+    WORD    0, 0, 0, 0, 0
+    WORD    0, 0, CASTANHO, 0, 0
+    WORD    0, CASTANHO, CASTANHO, CASTANHO, 0
+    WORD    0, 0, CASTANHO, 0, 0
+    WORD    0, 0, 0, 0, 0
+
 DEF_ASTEROIDE_MAU:                          ; definição do asteróide "mau" (não minerável)
     WORD    LARGURA_5
     WORD    ALTURA_5
+    WORD    VERMELHO, 0, VERMELHO, 0, VERMELHO
     WORD    0, VERMELHO, VERMELHO, VERMELHO, 0
-    WORD    VERMELHO, VERMELHO, VERMELHO, VERMELHO, VERMELHO
-    WORD    VERMELHO, VERMELHO, VERMELHO, VERMELHO, VERMELHO
-    WORD    VERMELHO, VERMELHO, VERMELHO, VERMELHO, VERMELHO
+    WORD    VERMELHO, VERMELHO, 0, VERMELHO, VERMELHO
     WORD    0, VERMELHO, VERMELHO, VERMELHO, 0
+    WORD    VERMELHO, 0, VERMELHO, 0, VERMELHO
+
+DEF_ASTEROIDE_MAU_EXPLOSAO:                          ; definição do asteróide "mau" ao colidir (não minerável)
+    WORD    LARGURA_5
+    WORD    ALTURA_5
+    WORD    0, AZUL, 0, AZUL, 0
+    WORD    AZUL, 0, AZUL, 0, AZUL
+    WORD    0, AZUL, 0, AZUL, 0
+    WORD    AZUL, 0, AZUL, 0, AZUL
+    WORD    0, AZUL, 0, AZUL, 0
 
 SONDAS:
     WORD    OFF, MOVIMENTOS, ECRA_SONDA_ESQ ; sonda esquerda (ON/OFF), movimentos restantes
@@ -341,7 +361,7 @@ tab_int:                                    ; tabela das rotinas de interrupçã
 
 evento_int:                                 ; tabela das ocorrências de interrupções
     LOCK    0
-    WORD    0
+    LOCK    0
     LOCK    0
     LOCK    0
 
@@ -375,7 +395,7 @@ inicio:
     CALL    display                         ; mostra o nível de energia na nave
 
     EI0                                     ; permite a interrupção 0
-;    EI1                                     ; permite a interrupção 1
+    EI1                                     ; permite a interrupção 1
     EI2                                     ; permite a interrupção 2
     EI3                                     ; permite a interrupção 3
     EI                                      ; permite interrupções (geral)
@@ -549,6 +569,10 @@ tira_pausa:
     MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona a música de fundo
     MOV     [CONTINUA_SOM_OU_VIDEO], R1     ; continua a música de fundo
 
+    MOV     R1, SOM_PAUSA_EFFECT            ; endereço do som de pausa
+    MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona o som
+    MOV     [INICIA_REPRODUCAO], R1         ; reproduz o som
+
     MOV     R11, 0                          ; 0 simboliza joga não pausado
     MOV     [R8], R11                       ; tira o jogo da pausa
 
@@ -567,6 +591,10 @@ mete_pausa:
     MOV     R11, SOM_TEMA_PAUSA             ; endereço da música de fundo
     MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona a música de fundo
     MOV     [REPRODUZ_EM_CICLO], R11        ; começa a música de fundo
+
+    MOV     R1, SOM_PAUSA_EFFECT            ; endereço do som de pausa
+    MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona o som
+    MOV     [INICIA_REPRODUCAO], R1         ; reproduz o som
 
     MOV     R11, 1                          ; 1 simboliza jogo pausado
     MOV     [R8], R11                       ; mete o jogo em pausa
@@ -1046,7 +1074,7 @@ sondas_int:
 	PUSH R0
 
 	MOV     R0, evento_int			        ; tabela das ocorrências de interrupções
-    MOV     R1, 1                           ; simboliza que a interrupção ocorreu
+
 	MOV     [R0+2], R1		                ; atualiza a variável da ocorrência da interrupção 1
 						                    ; Usa-se 2 porque cada word tem 2 bytes
 	POP  R0
@@ -1221,31 +1249,56 @@ informacoes_objeto:
 PROCESS SP_asteroides
 
 processo_asteroides:
-    MOV     R0, 0
+    MOV     R0, 0                           ; primeiro asteróide
 
 inicia_asteroides:
-;    CMP     R0, NUM_ASTEROIDES              ; já iniciou todos os asteróides?
-;    JZ      ciclo_asteroide                 ; se sim, vai para o ciclo principal do processo
+    CMP     R0, MAX_ASTEROIDES              ; já iniciou todos os asteróides?
+    JZ      ciclo_asteroide                 ; se sim, vai para o ciclo principal do processo
     CALL    coloca_topo                     ; coloca o asteróide
-;    ADD     R0, 1                           ; asteróide seguinte
-;    JMP     inicia_asteroides               ; repete o ciclo
+    ADD     R0, 1                           ; asteróide seguinte
+    JMP     inicia_asteroides               ; repete o ciclo
 
-ciclo_asteroide:
-    YIELD
+ciclo_principal_asteroide:
+    MOV     R5, [PAUSA]                     ; endereço do estado atual do jogo
+    CMP     R5, 1 
+    JZ      ciclo_principal_asteroide       ; se o jogo estiver pausado volta ao começo do ciclo
+
     MOV     R1, evento_int                  ; tabela das ocorrências das interrupções
     MOV     R2, [R1]                        ; ocorrência da interrupção 0
+
+ciclo_asteroides:
+    MOV     R0, 0
+    MOV     R4, R0
+    
+trata_asteroide:
+    CMP     R0, MAX_ASTEROIDES
+    JZ      processo_asteroides
+    MOV     R1, ASTEROIDES
+    ADD     R4, 6
+    ADD     R1, R4
+    ADD     R1, 4
+    
+         
+
 ;    CMP     R2, 1
 ;    JNZ     ciclo_asteroide
 ;    MOV     R2, 0
-;    MOV     [R1], R2
-    MOV     R5, PAUSA                       ; endereço do estado atual do jogo
-    MOV     R5, [R5]                        ; estado atual do jogo
-    CMP     R5, 1                           ; o jogo está pausado?
+;    MOV     [R1], R2                          ; o jogo está pausado?
     JZ      ciclo_asteroide                 ; se sim, repete o ciclo
+ciclo_move_asteroide:
+    CMP     R0, MAX_ASTEROIDES              ; já moveu todos os asteróides
+    JZ      ciclo_asteroide                 ; se sim, volta ao ciclo principal
+    MOV     R7, [R1+4]                      ; lê o estado do asteroide
+    CMP     R7, ON                          ; o asteróide está "ON" (?)
+    JZ      move_asteroide                  ; move o asteróide
+    CALL    coloca_topo
+exit_reinicia_asteroide:
+    ADD     R0, 1                           ; asteróide seguinte
+    JMP     ciclo_move_asteroide            ; repete o ciclo
+
+reinicia_asteroide:
     CALL    move_asteroide
-    JMP     ciclo_asteroide
-
-
+    JMP     exit_reinicia_asteroide
 
 ; ****************************************************************************
 ; COLOCA_TOPO
@@ -1261,8 +1314,10 @@ coloca_topo:
     PUSH    R4
 
     SHL     R0, 2                           ; valor a adicionar (nº do asteróide)
+    ADD     R0, 2
     MOV     R1, ASTEROIDES                  ; tabela dos asteróides
     ADD     R1, R0                          ; asteróide a tratar
+    SUB     R0, 2
     MOV     R3, [R1]                        ; ecrã do asteróide
     MOV     [SELECIONA_ECRA], R3            ; seleciona o ecrã  
 
@@ -1314,7 +1369,12 @@ coloca_bom:
     MOV     R1, DEF_ASTEROIDE_BOM           ; definição do asteróide bom
     JMP     exit_coloca_bom                 ; volta ao ciclo
 
-
+; ****************************************************************************
+; MOVE_ASTEROIDE
+; Descrição: Move um asteróide.
+; Entradas:  R0 - Número do asteróide
+; Saídas:    ------------------------
+; ****************************************************************************
 move_asteroide:
     PUSH    R0
     PUSH    R1
@@ -1323,8 +1383,11 @@ move_asteroide:
     PUSH    R9
 
     SHL     R0, 2                           ; valor a adicionar (nº do asteróide)
+    ADD     R0, 2
     MOV     R1, ASTEROIDES                  ; tabela dos asteróides
     ADD     R1, R0                          ; asteróide a mover
+    SUB     R0, 2
+    CALL
     MOV     R2, [R1]                        ; ecrã do asteróide
     MOV     [SELECIONA_ECRA], R2            ; seleciona o ecrã
     MOV     [APAGA_ECRA], R2                ; apaga o ecrã
@@ -1361,3 +1424,11 @@ exit_move_bom:
 move_bom:
     MOV     R9, DEF_ASTEROIDE_BOM           ; definição do asteróide bom
     JMP     exit_move_bom
+
+
+testa_limites:
+    MOV     R5, LINHA_MAX
+    CMP     R2, R5                          ; Compara a linha final do ecrã com a do asteróide
+    JNZ     exit_testa_limites
+
+    MOV     [R1+4], OFF                     ; Ao passar dos limites o asteróide é "desligado" para ser recriado no próximo ciclo

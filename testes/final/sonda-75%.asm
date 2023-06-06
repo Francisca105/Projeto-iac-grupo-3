@@ -316,7 +316,7 @@ tab_int:                                    ; tabela das rotinas de interrupçã
 
 evento_int:                                 ; tabela das ocorrências de interrupções
     LOCK    0
-    WORD    0
+    LOCK    0
     LOCK    0
     LOCK    0
 
@@ -422,8 +422,8 @@ sonda_ciclo_start:
 
     MOV     R10, evento_int                 ; tabela das ocorrências das interrupções
     MOV     R11, [R10+2]                    ; ocorrência da interrupção 1
-    CMP     R11, 1
-    JNZ     sonda_ciclo_start
+    ;CMP     R11, 1
+    ;JNZ     sonda_ciclo_start
     MOV     R11, 0
     MOV     [R10+2], R11
 
@@ -463,17 +463,17 @@ verifica_sonda:
     MOV     R4, [R6]                          ; copia a tabela das sondas
 
     CMP     R4, ON                          ; a sonda já existe?
-    JNZ     exit_verifica                   ; se sim, passa para a sonda seguinte
+    JNZ     exit_verifica                   ; se não, passa para a sonda seguinte
 
-    MOV     R4, [R6+2]                      ; endereço do nº de movimentos do asteróide
     MOV     R5, MOVIMENTOS
-    CMP     R4, 0                          ; já realizou o nº máximo de movimentos?
     MOV     R5, [R6+4]                      ; ecrã da sonda
     MOV     [SELECIONA_ECRA], R5            ; seleciona o ecrã da respetiva sonda
     MOV     [APAGA_ECRA], R5
+
+    MOV     R4, [R6+2]                      ; endereço do nº de movimentos do asteróide
+    CMP     R4, 0                           ; já realizou o nº máximo de movimentos?
     JZ      reinicia_sonda                  ; se sim, reinicia a sonda
     
-
     MOV     R7, [R6+2]
     SUB     R7, 1
     MOV     [R6+2], R7                       ; tira um movimento da sonda
@@ -589,6 +589,9 @@ cria_sonda:
 
     MOV     R4, ON                          ; simboliza sonda ligada
     MOV     [R1], R4                        ; atualiza a tabela das sondas
+
+    MOV     R4, MOVIMENTOS
+    MOV     [R1+2], R4
 
     MOV     R4, SOM_LASER                   ; endereço do som do laser
     MOV     [DEFINE_SOM_OU_VIDEO], R4       ; seleciona o som
@@ -1001,7 +1004,7 @@ sondas_int:
 	PUSH R0
 
 	MOV  R0, evento_int			            ; tabela das ocorrências de interrupções
-    MOV R1, 1                                        ; desbloqueia processo energia (qualquer registo serve)
+ ;   MOV R1, 1                                        ; desbloqueia processo energia (qualquer registo serve)
 	MOV  [R0+2], R1		                    ; na componente 1 da variável evento_int
 						                    ; Usa-se 4 porque cada word tem 2 bytes
 	POP  R0
