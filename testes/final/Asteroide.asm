@@ -46,6 +46,7 @@ CENARIO_MENU                EQU 0           ; número do cenário do fundo do me
 CENARIO_JOGO                EQU 1           ; número do cenário do fundo do jogo
 CENARIO_TERMINADO           EQU 2           ; número do cenário do fundo de quando se termina o jogo
 CENARIO_SEM_ENERGIA         EQU 3           ; número do cenário do fundo de quando se fica sem energia
+CENARIO_COLISAO             EQU 5           ; número do cenário do fundo de quando um asteroide colide com a nave
 CENARIO_PAUSA               EQU 4           ; número do cenário frontal de quando se pausa o jogo
 
 SOM_TEMA                    EQU 0           ; número da música de fundo
@@ -264,16 +265,16 @@ DEF_PAINEL:                                 ; definição do painel de instrumen
 
 POSSIVEIS_AST:                              ; coluna inicial e movimento horizontal
     WORD    0, 1
-    WORD    30, -1
     WORD    30, 0
-    WORD    30, 1
     WORD    59, -1
+    WORD    30, -1
+    WORD    30, 1
 
-ASTEROIDES:                                 ; ecrã e tipo do asteróide
-    WORD    ECRA_ASTEROIDE_1, 0, OFF
-    WORD    ECRA_ASTEROIDE_2, 0, OFF
-    WORD    ECRA_ASTEROIDE_3, 0, OFF
-    WORD    ECRA_ASTEROIDE_4, 0, OFF
+ASTEROIDES:                                 ; ecrã, tipo, ON/OFF e "lane" do asteróide
+    WORD    ECRA_ASTEROIDE_1, 0, OFF, 0
+    WORD    ECRA_ASTEROIDE_2, 0, OFF, 0
+    WORD    ECRA_ASTEROIDE_3, 0, OFF, 0
+    WORD    ECRA_ASTEROIDE_4, 0, OFF, 0
 
 POS_AST:                                    ; linha e coluna do asteróide
     WORD    0, 0
@@ -439,12 +440,51 @@ start:
     MOV     R1, SOM_TEMA_JOGO               ; endereço da música de start
     MOV     [DEFINE_SOM_OU_VIDEO], R1       ; seleciona a música de start
     MOV     [REPRODUZ_EM_CICLO], R1         ; reproduz o som de start
-
+    ;CALL    processo_asteroides             ; inicia o processo asteroides
     MOV     R0, POS_NAVE                    ; coordenadas da nave
     MOV     R1, DEF_NAVE                    ; protótipo da nave
     CALL    desenha_objeto                  ; desenha a nave
 
-;    CALL    processo_sondas                 ; inicia o processo sondas
+reinicia_variaveis_asteroides:
+    MOV     R0, ASTEROIDES
+    MOV     R1, 0
+    JMP     ciclo_reiniciar_asteroides
+
+;reinicia_variaveis_sonda:
+
+ciclo_reiniciar_asteroides:
+    MOV     R4, R1                          ; copia o número do asteróide
+
+    SHL     R4, 3                           ; multiplica por 8
+    MOV     R3, R0
+    ADD     R3, R4                          ; vai para o asteroide que pretendemos
+
+    MOV     R2, 0
+    ADD     R3, 2
+    MOV     [R3], R2                      ; muda o tipo para 0
+    ADD     R3, 4
+    MOV     [R3], R2                      ; passa o lane para 0
+    MOV     R2, OFF
+    SUB     R3, 2
+    MOV     [R3], R2                      ; muda o estado para OFF
+
+    CALL    reinicia_linha_asteroide
+
+    ADD     R1, 1                           ; acrescenta um asteróide
+    CMP     R1, MAX_ASTEROIDES              ; é o último (?)
+    JZ      main                            ; passa para a main
+    JMP     ciclo_reiniciar_asteroides
+
+reinicia_linha_asteroide:
+
+    MOV     R5, POS_AST                     ; copia a tabela das posições dos asteróides 
+    MOV     R4, R1                          ; copia o número do asteróide para R4
+    SHL     R4, 2                           ; multiplica por 4
+    ADD     R5, R4                          ; adiciona o valor do asteróide (tendo em conta as words) na tabela
+    MOV     R4, 0
+    MOV     [R5], R4                        ; reseta a linha do asteroide a 0
+    
+    RET
 
 main:
     YIELD
@@ -463,6 +503,303 @@ main:
 ; Processo Controlos
 ; Descrição: Trata de pausar, tirar da pausa e terminar o jogo.
 ; ****************************************************************************
+PROCESS SP_asteroides
+
+processo_asteroides:
+    MOV     R0, 0                           ; primeiro asteróide
+    MOV     R7, 0
+    
+    MOV     R11, [evento_int]               ; tabela das ocorrências das interrupções
+
+    MOV     R11, [PAUSA]                    ; endereço do estado atual do jogo
+    CMP     R11, 1 
+    JZ      processo_asteroides             ; se o jogo estiver pausado volta ao começo do ciclo
+
+ciclo_asteroide:
+    CMP     R0, MAX_ASTEROIDES              ; chegou ao ultimo asteróide (?)
+    JZ      processo_asteroides             ; reinicia o processo
+
+    CALL    testa_limites
+    CMP     R7, 1
+    JZ      processo_asteroides
+
+    MOV     R4, R0                          ; copia o valor atual do asteróide a ser avaliado
+    MOV     R11, 8
+    MUL     R4, R11                         ; multiplica o valor 
+
+    MOV     R1, ASTEROIDES                  ; tabela dos asteróides
+    ADD     R1, R4                          ; asteróide a tratar
+
+
+    MOV     R4, [R1+4]                      ; indica se o asteróide existe
+    MOV     R11, ON                         ; simboliza um asteróide existente
+
+    CMP     R4, R11                         ; o asteroide existe (?)
+    JNZ     coloca_asteroide                ; se não existe, coloca um novo
+
+    CALL    move_asteroide
+    
+exit_coloca_asteroide: 
+    ADD     R0, 1                           ; asteróide seguinte
+    JMP     ciclo_asteroide                 ; volta ao ciclo
+         
+coloca_asteroide:
+    CALL    coloca_topo                     ; coloca no topo um novo asteróide
+    JMP     exit_coloca_asteroide
+
+termina_processo_asteroides:
+    RET
+
+
+;    CMP     R2, 1
+;    JNZ     ciclo_asteroide
+;    MOV     R2, 0
+;    MOV     [R1], R2                          ; o jogo está pausado?
+;    JZ      ciclo_asteroide                 ; se sim, repete o ciclo
+
+;ciclo_move_asteroide:
+;    CMP     R0, MAX_ASTEROIDES              ; já moveu todos os asteróides
+;    JZ      ciclo_asteroide                 ; se sim, volta ao ciclo principal
+;    MOV     R7, [R1+4]                      ; lê o estado do asteroide
+;    CMP     R7, ON                          ; o asteróide está "ON" (?)
+;    JZ      move_asteroide                  ; move o asteróide
+;    CALL    coloca_topo
+;exit_reinicia_asteroide:
+;    ADD     R0, 1                           ; asteróide seguinte
+;    JMP     ciclo_move_asteroide            ; repete o ciclo
+;
+;reinicia_asteroide:
+;    CALL    move_asteroide
+;    JMP     exit_reinicia_asteroide
+;
+; ****************************************************************************
+; COLOCA_TOPO
+; Descrição: Coloca um asteróide "aleatoriamente" numa das 5 posições do topo.
+; Entradas:  R0 - Número do asteróide
+; Saídas:    ------------------------
+; ****************************************************************************
+coloca_topo:
+    PUSH    R0
+    PUSH    R1
+    PUSH    R2
+    PUSH    R3
+    PUSH    R4
+    PUSH    R5
+    PUSH    R6
+
+    MOV     R5, R0                          ; copiamos o valor do asteroide atual     
+    MOV     R6, 8                           
+    MUL     R5, R6                          ; multiplicamos por 8 (4 words)
+
+    SHL     R0, 2                           ; valor a adicionar (nº do asteróide)
+    ;ADD     R0, 2                           ; offset porque a tabela dos asteróides tem 3 variáveis
+    MOV     R1, ASTEROIDES                  ; tabela dos asteróides
+    ADD     R1, R5                          ; asteróide a tratar
+;    SUB     R0, 2                           ; offset porque as restantes tabelas dos asteróides têm apenas 4 asteróides
+    MOV     R3, [R1]                        ; ecrã do asteróide
+    MOV     [SELECIONA_ECRA], R3            ; seleciona o ecrã  
+
+    MOV     R2, TEC_COL                     ; periférico das colunas
+    MOVB    R3, [R2]                        ; lê do periférico
+    SHR     R3, 4                           ; isola os bits 4-7 (gerados aleatoriamente)
+    MOV     R2, R3                          ; copia o valor
+    SHR     R2, 2                           ; isola os 2 bits de menor peso
+
+    ADD     R1, 4                           ; estado do asteróide
+
+    MOV     R4, ON                          ; indica um asteróide existente
+    MOV     [R1], R4                        ; atualiza o estado do asteróide para ON
+
+    SUB     R1, 2                           ; tipo do asteróide
+    CMP     R2, AST_BOM                     ; o asteróide será bom?
+    JZ      coloca_bom                      ; se sim, procede como tal
+    MOV     R4, AST_MAU                     ; simboliza um asteróide mau
+
+    MOV     [R1], R4                          ; o asteróide é mau
+    MOV     R1, DEF_ASTEROIDE_MAU           ; definição do asteróide mau
+
+exit_coloca_bom:  
+    MOV     R4, 5                           ; número de possíveis asteróides
+    MOD     R3, R4                          ; obtém um número entre 0 e 4
+
+    CMP     R3, 1                           ; a possibilidade é de um asteroide do meio com movimento diagonal (?)
+    JGE     sinaliza_asteroide              ; se sim, o valor de lane passa a 0
+
+exit_sinaliza_asteroide:
+    SHL     R3, 2                           ; multiplica por 4
+
+    MOV     R4, POSSIVEIS_AST               ; possíveis asteróides
+    ADD     R4, R3                          ; asteróide escolhido
+
+    MOV     R2, [R4]                        ; coluna inicial
+    MOV     R3, POS_AST                     ; posições dos asteróides
+    ADD     R3, R0                          ; posição do asteróide a tratar
+    ADD     R3, 2                           ; coluna incial
+    MOV     [R3], R2                        ; atualiza a coluna inicial
+
+    ADD     R4, 2                           ; endereço do movimento horizontal
+    MOV     R4, [R4]                        ; movimento horizontal
+    MOV     R3, MOV_AST                     ; movimentos dos asteróides
+    ADD     R3, R0                          ; movimentos do asteróide a tratar
+    MOV     [R3], R4                        ; atualiza os movimentos
+    MOV     R2, POS_AST                     ; posição dos asteróides
+    ADD     R0, R2                          ; posição do asteróide a tratar
+    CALL    desenha_objeto                  ; desenha o asteróide
+
+    POP     R6
+    POP     R5
+    POP     R4
+    POP     R3
+    POP     R2
+    POP     R1
+    POP     R0
+    RET
+
+sinaliza_asteroide:
+    MOV     R6, ASTEROIDES
+    ADD     R6, R5                          ; lê a variável asteroides na componente que queremos
+    ADD     R6, 6                           ; lane do asteróide
+    MOV     R11, 1                          ; indica que o asteróide pode colidir com a nave
+    MOV     [R6], R11                       ; passa o valor a 1
+    JMP     exit_sinaliza_asteroide
+
+
+coloca_bom:
+    MOV     R4, AST_BOM                     ; simboliza um asteróide bom
+    MOV     [R1], R4                        ; o asteróide é bom
+    MOV     R1, DEF_ASTEROIDE_BOM           ; definição do asteróide bom
+    JMP     exit_coloca_bom                 ; volta ao ciclo
+
+; ****************************************************************************
+; MOVE_ASTEROIDE
+; Descrição: Move um asteróide.
+; Entradas:  R0 - Número do asteróide
+; Saídas:    ------------------------
+; ****************************************************************************
+move_asteroide:
+    PUSH    R0
+    PUSH    R1
+    PUSH    R2
+    PUSH    R3
+    PUSH    R9
+
+    MOV     R5, R0                          ; copiamos o valor do número do asteróide atual
+    MOV     R2, 8                           
+    MUL     R5, R2                          ; multiplicamos por 8 (4 words)
+
+    SHL     R0, 2                           ; multiplicamos por 2
+
+    MOV     R1, ASTEROIDES                  ; tabela dos asteróides
+    ADD     R1, R5                          ; asteróide a mover
+    MOV     R2, [R1]                        ; ecrã do asteróide
+    MOV     [SELECIONA_ECRA], R2            ; seleciona o ecrã
+    MOV     [APAGA_ECRA], R2                ; apaga o ecrã
+
+    MOV     R2, [R1+2]                      ; tipo do asteróide
+    MOV     R3, AST_BOM                     ; simboliza um asteróide bom
+    CMP     R2, R3                          ; o asteróide é bom?
+    JZ      move_bom                        ; se sim, procede como tal
+    MOV     R9, DEF_ASTEROIDE_MAU           ; definição do asteróide mau
+
+exit_move_bom:
+    MOV     R1, POS_AST                     ; posição dos asteróides
+    ADD     R1, R0                          ; posição do asteróide a mover
+
+    MOV     R2, MOV_AST                     ; movimentos dos asteróides
+    ADD     R2, R0                          ; movimentos do asteróide a tratar
+    MOV     R2, [R2]                        ; movimento vertical
+    MOV     R3, [R1]                        ; linha do asteróide
+    ADD     R3, 1                           ; nova linha do asteróide
+    MOV     [R1], R3                        ; atualiza a linha do asteróide
+    MOV     R3, [R1+2]                      ; coluna do asteróide
+    ADD     R3, R2                          ; nova coluna do asteróide
+    MOV     [R1+2], R3                      ; atualiza a coluna do asteróide
+    MOV     R0, R1                          ; mete no registo certo
+    MOV     R1, R9                          ; mete no registo certo   
+    CALL    desenha_objeto                  ; desenha o asteróide
+
+    POP     R9
+    POP     R3
+    POP     R2
+    POP     R1
+    POP     R0
+    RET
+
+move_bom:
+    MOV     R9, DEF_ASTEROIDE_BOM           ; definição do asteróide bom
+    JMP     exit_move_bom
+
+; ****************************************************************************
+; TESTA_LIMITES
+; Descrição: Testa se um asteroide chegou ao fim do ecrã / colide com a nova.
+; Entradas:  R0 - Número do asteróide
+; Saídas:    ------------------------
+; ****************************************************************************
+
+testa_limites:
+    PUSH    R0
+    PUSH    R1
+    PUSH    R2
+    PUSH    R3
+    PUSH    R4
+    PUSH    R5
+    PUSH    R6
+
+
+    MOV     R1, R0                          ; copia o valor do número do asteróide
+    SHL     R1, 2                           ; multiplica por 4
+    MOV     R3, POS_AST
+    ADD     R3, R1
+    MOV     R2, [R3]                ; linha do asteróide
+                         
+    SHL     R0, 3                           ; multiplicamos por 8 (4 words)
+    
+    MOV     R1, ASTEROIDES                  ; tabela dos asteróides
+    ADD     R1, R0                          ; asteróide a testar
+    MOV     R4, [R1+6]                      ; "lane" do asteróide
+
+
+    MOV     R5, LINHA_MAX                   ; define a linha máxima do ecrã
+    
+    CMP     R4, 1                           ; o lane do asteróide é 1 (?)
+    JZ      muda_linha_limite               ; se sim, a linha limite passa a 26
+
+testa_limites_continuacao:
+    CMP     R2, R5                          ; Compara a linha final do ecrã com a do asteróide
+    JZ      reinicia_asteroide
+
+exit_testa_limites:
+    POP     R6
+    POP     R5
+    POP     R4
+    POP     R3
+    POP     R2
+    POP     R1
+    POP     R0
+    RET
+
+reinicia_asteroide:
+    MOV     R6, [R1]
+    MOV     [SELECIONA_ECRA], R6
+    MOV     [APAGA_ECRA], R6
+    MOV     R2, OFF
+    ADD     R1, 4
+    MOV     [R1], R2                      ; Ao passar dos limites o asteróide é "desligado" para ser recriado no próximo ciclo
+    MOV     R6, 0
+    MOV     [R3], R6
+    
+    CMP     R4, 1                           ; o lane do asteróide é 1 (?)
+    JZ      termina_jogo_asteroide
+    JMP     exit_testa_limites
+
+muda_linha_limite:
+    MOV     R5, 22
+    JMP     testa_limites_continuacao
+
+termina_jogo_asteroide:
+    CALL    game_over_colisao
+    MOV     R7, 1
+    JMP     exit_testa_limites
 
 PROCESS SP_controlos
 
@@ -633,6 +970,17 @@ game_over_terminado:
     PUSH    R1
 
     MOV     R1, CENARIO_TERMINADO           ; cenário de fundo com a mensagem de fim de jogo
+    MOV     [DEFINE_CENARIO], R1            ; seleciona o cenário
+
+    CALL    game_over                       ; termina o jogo
+
+    POP     R1
+    RET
+
+game_over_colisao:
+    PUSH    R1
+
+    MOV     R1, CENARIO_COLISAO             ; cenário de fundo com a mensagem de fim de jogo
     MOV     [DEFINE_CENARIO], R1            ; seleciona o cenário
 
     CALL    game_over                       ; termina o jogo
@@ -921,124 +1269,6 @@ desenha_painel:
 
 
 
-; ****************************************************************************
-; Processo sondas
-; Descrição: Move as sondas em jogo a cada 0.4 segundos.
-; ****************************************************************************
-
-;PROCESS SP_sondas
-
-;processo_sondas:
-;    YIELD
-;    MOV     R6, SONDAS                      ; tabela das sondas
-;    MOV     R0, POS_SONDAS                  ; posição das sondas
-;    MOV     R2, MOV_SONDA                   ; movimentos das sondas
-;    MOV     R1, DEF_SONDA                   ; definição da sonda
-;    
-;
-;    MOV     R10, evento_int                 ; tabela das ocorrências das interrupções
-;    MOV     R11, [R10+2]                    ; ocorrência da interrupção 1
-;    CMP     R11, 1
-;    JNZ     processo_sondas
-;    MOV     R11, 0
-;    MOV     [R10+2], R11
-;
-;    MOV     R9, PAUSA                       ; endereço do estado atual do jogo
-;    MOV     R9, [R9]                        ; estado atual do jogo
-;    CMP     R9, 1                           ; o jogo está pausado?
-;    
-;    JZ      processo_sondas                 ; se sim, repete o ciclo
-;
-;sonda_esquerda:
-;    MOV     R8, COLUNA_SONDA_ESQ            ; coluna inicial da sonda esquerda
-;
-;    CALL    verifica_sonda                      ; move a sonda
-;
-;sonda_meio:
-;    ADD     R6, 6                           ; tabela da sonda do meio
-;    ADD     R0, 4                           ; posição da sonda do meio
-;    ADD     R2, 2                           ; movimentos da sonda do meio
-;    ADD     R1, 4                           ; definição da sonda do meio
-;
-;    MOV     R8, COLUNA_SONDA_MEIO           ; coluna inicial da sonda do meio
-;    
-;    CALL    verifica_sonda                      ; move a sonda
-;
-;sonda_direita:    
-;    ADD     R6, 6                           ; tabela da sonda da direita
-;    ADD     R0, 4                           ; posição da sonda da direita
-;    ADD     R2, 2                           ; movimentos da sonda da direita
-;    ADD     R1, 4                           ; definição da sonda do meio
-;
-;    MOV     R8, COLUNA_SONDA_DIR
-;
-;    CALL    verifica_sonda
-;    JMP     processo_sondas
-;    
-;verifica_sonda:
-;    MOV     R4, [R6]                          ; copia a tabela das sondas
-;
-;    CMP     R4, ON                          ; a sonda já existe?
-;    JNZ     exit_verifica                   ; se sim, passa para a sonda seguinte
-;
-;    MOV     R4, [R6+2]                      ; endereço do nº de movimentos do asteróide
-;    MOV     R5, MOVIMENTOS
-;    CMP     R4, 0                          ; já realizou o nº máximo de movimentos?
-;    MOV     R5, [R6+4]                      ; ecrã da sonda
-;    MOV     [SELECIONA_ECRA], R5            ; seleciona o ecrã da respetiva sonda
-;    MOV     [APAGA_ECRA], R5
-;    JZ      reinicia_sonda                  ; se sim, reinicia a sonda
-;    
-;
-;    MOV     R7, [R6+2]
-;    SUB     R7, 1
-;    MOV     [R6+2], R7                       ; tira um movimento da sonda
-;
-;
-;move_sonda:
-;    PUSH    R2
-;    PUSH    R3
-;    PUSH    R6
-;    PUSH    R4
-;
-;    MOV     R4, R2
-;
-;    MOV     R2, [R0]                        ; lê a linha da sonda
-;    MOV     R5, [R4]                        ; lê o número do movimento horizontal
-;    ADD     R2, -1                          ; tira uma linha (movimento de subida)
-;    MOV     R3, [R0+2]                      ; lê a coluna
-;    ADD     R3, R5                          ; acrescenta o movimento ao número da coluna
-;    MOV     R6, COR_SONDA                   
-;
-;    CALL    desenha_pixel
-;
-;    MOV     [R0], R2                        ; atualiza a linha
-;    MOV     [R0+2], R3                      ; atualiza a coluna
-;    
-;    POP     R4
-;    POP     R6
-;    POP     R3
-;    POP     R2
-;
-;    RET
-;
-;
-;exit_verifica:
-;    RET
-;
-;reinicia_sonda:
-;    MOV     R5, OFF                       
-;    MOV     [R6], R5                        ; simboliza sonda desligada
-;    MOV     R4, R0                          ; posição da sonda
-;    
-;    MOV     R5, LINHA_SONDA
-;    MOV     [R4], R5                        ; reinicia a linha
-;    
-;    ADD     R4, 2                           ; coluna da sonda
-;    MOV     [R4], R8                        ; reinicia a coluna
-;    JMP     exit_verifica                   ; passa para a sonda seguinte
-
-
 
 ; ****************************************************************************
 ; INTERRUPÇÕES
@@ -1228,230 +1458,3 @@ informacoes_objeto:
 
 
 
-PROCESS SP_asteroides
-
-processo_asteroides:
-    MOV     R0, 0                           ; primeiro asteróide
-
-;inicia_asteroides:
-;    CMP     R0, MAX_ASTEROIDES              ; já iniciou todos os asteróides?
-;    JZ      ciclo_asteroide                 ; se sim, vai para o ciclo principal do processo
-;    CALL    coloca_topo                     ; coloca o asteróide
-;    ADD     R0, 1                           ; asteróide seguinte
-;    JMP     inicia_asteroides               ; repete o ciclo
-;
-;ciclo_principal_asteroide:
-;    MOV     R5, [PAUSA]                     ; endereço do estado atual do jogo
-;    CMP     R5, 1 
-;    JZ      ciclo_principal_asteroide       ; se o jogo estiver pausado volta ao começo do ciclo
-;
-;    MOV     R1, evento_int                  ; tabela das ocorrências das interrupções
-;    MOV     R2, [R1]                        ; ocorrência da interrupção 0
-;
-;ciclo_asteroides:
-;    MOV     R0, 0
-;    MOV     R4, R0
-    
-ciclo_asteroide:
-    MOV     R11, [PAUSA]                    ; endereço do estado atual do jogo
-    CMP     R11, 1 
-    JZ      ciclo_asteroide                 ; se o jogo estiver pausado volta ao começo do ciclo
-
-    MOV     R11, [evento_int]               ; tabela das ocorrências das interrupções
-
-    CMP     R0, MAX_ASTEROIDES              ; chegou ao ultimo asteróide (?)
-    JZ      processo_asteroides             ; reinicia o processo
-
-    MOV     R4, R0                          ; copia o valor atual do asteróide a ser avaliado
-    MOV     R11, 6
-    MUL     R4, R11                         ; multiplica o valor 
-
-    MOV     R1, ASTEROIDES                  ; tabela dos asteróides
-    ADD     R1, R4                          ; asteróide a tratar
-    
-    MOV     R4, [R1+4]                      ; indica se o asteróide existe
-    MOV     R11, ON                         ; simboliza um asteróide existente
-        
-    CMP     R4, R11                         ; o asteroide existe (?)
-    JNZ     coloca_asteroide                ; se não existe, coloca um novo
-    CALL    move_asteroide
-    
-exit_coloca_asteroide: 
-    ADD     R0, 1                           ; asteróide seguinte
-    JMP     ciclo_asteroide                 ; volta ao ciclo
-         
-coloca_asteroide:
-    CALL    coloca_topo                     ; coloca no topo um novo asteróide
-    JMP     exit_coloca_asteroide
-
-
-
-;    CMP     R2, 1
-;    JNZ     ciclo_asteroide
-;    MOV     R2, 0
-;    MOV     [R1], R2                          ; o jogo está pausado?
-;    JZ      ciclo_asteroide                 ; se sim, repete o ciclo
-
-;ciclo_move_asteroide:
-;    CMP     R0, MAX_ASTEROIDES              ; já moveu todos os asteróides
-;    JZ      ciclo_asteroide                 ; se sim, volta ao ciclo principal
-;    MOV     R7, [R1+4]                      ; lê o estado do asteroide
-;    CMP     R7, ON                          ; o asteróide está "ON" (?)
-;    JZ      move_asteroide                  ; move o asteróide
-;    CALL    coloca_topo
-;exit_reinicia_asteroide:
-;    ADD     R0, 1                           ; asteróide seguinte
-;    JMP     ciclo_move_asteroide            ; repete o ciclo
-;
-;reinicia_asteroide:
-;    CALL    move_asteroide
-;    JMP     exit_reinicia_asteroide
-;
-; ****************************************************************************
-; COLOCA_TOPO
-; Descrição: Coloca um asteróide "aleatoriamente" numa das 5 posições do topo.
-; Entradas:  R0 - Número do asteróide
-; Saídas:    ------------------------
-; ****************************************************************************
-coloca_topo:
-    PUSH    R0
-    PUSH    R1
-    PUSH    R2
-    PUSH    R3
-    PUSH    R4
-    PUSH    R5
-    PUSH    R6
-
-    MOV     R5, R0                          ; copiamos o valor do asteroide atual     
-    MOV     R6, 6                           
-    MUL     R5, R6                          ; multiplicamos por 6 (3 words)
-
-    SHL     R0, 2                           ; valor a adicionar (nº do asteróide)
-    ;ADD     R0, 2                           ; offset porque a tabela dos asteróides tem 3 variáveis
-    MOV     R1, ASTEROIDES                  ; tabela dos asteróides
-    ADD     R1, R5                          ; asteróide a tratar
-;    SUB     R0, 2                           ; offset porque as restantes tabelas dos asteróides têm apenas 4 asteróides
-    MOV     R3, [R1]                        ; ecrã do asteróide
-    MOV     [SELECIONA_ECRA], R3            ; seleciona o ecrã  
-
-    MOV     R2, TEC_COL                     ; periférico das colunas
-    MOVB    R3, [R2]                        ; lê do periférico
-    SHR     R3, 4                           ; isola os bits 4-7 (gerados aleatoriamente)
-    MOV     R2, R3                          ; copia o valor
-    SHR     R2, 2                           ; isola os 2 bits de menor peso
-
-    ADD     R1, 4                           ; estado do asteróide
-
-    MOV     R4, ON                          ; indica um asteróide existente
-    MOV     [R1], R4                        ; atualiza o estado do asteróide para ON
-
-    SUB     R1, 2                           ; tipo do asteróide
-    CMP     R2, AST_BOM                     ; o asteróide será bom?
-    JZ      coloca_bom                      ; se sim, procede como tal
-    MOV     R4, AST_MAU                     ; simboliza um asteróide mau
-    MOV     R1, R4                        ; o asteróide é mau
-    MOV     R1, DEF_ASTEROIDE_MAU           ; definição do asteróide mau
-
-exit_coloca_bom:  
-    MOV     R4, 5                           ; número de possíveis asteróides
-    MOD     R3, R4                          ; obtém um número entre 0 e 4
-    SHL     R3, 2                           ; multiplica por 4
-    MOV     R4, POSSIVEIS_AST               ; possíveis asteróides
-    ADD     R4, R3                          ; asteróide escolhido
-
-    MOV     R2, [R4]                        ; coluna inicial
-    MOV     R3, POS_AST                     ; posições dos asteróides
-    ADD     R3, R0                          ; posição do asteróide a tratar
-    ADD     R3, 2                           ; coluna incial
-    MOV     [R3], R2                        ; atualiza a coluna inicial
-
-    ADD     R4, 2                           ; endereço do movimento horizontal
-    MOV     R4, [R4]                        ; movimento horizontal
-    MOV     R3, MOV_AST                     ; movimentos dos asteróides
-    ADD     R3, R0                          ; movimentos do asteróide a tratar
-    MOV     [R3], R4                        ; atualiza os movimentos
-    MOV     R2, POS_AST                     ; posição dos asteróides
-    ADD     R0, R2                          ; posição do asteróide a tratar
-    CALL    desenha_objeto                  ; desenha o asteróide
-
-    POP     R6
-    POP     R5
-    POP     R4
-    POP     R3
-    POP     R2
-    POP     R1
-    POP     R0
-    RET
-
-coloca_bom:
-    MOV     R4, AST_BOM                     ; simboliza um asteróide bom
-    MOV     [R1], R4                        ; o asteróide é bom
-    MOV     R1, DEF_ASTEROIDE_BOM           ; definição do asteróide bom
-    JMP     exit_coloca_bom                 ; volta ao ciclo
-
-; ****************************************************************************
-; MOVE_ASTEROIDE
-; Descrição: Move um asteróide.
-; Entradas:  R0 - Número do asteróide
-; Saídas:    ------------------------
-; ****************************************************************************
-move_asteroide:
-    PUSH    R0
-    PUSH    R1
-    PUSH    R2
-    PUSH    R3
-    PUSH    R9
-
-    MOV     R5, R0                          ; copiamos o valor do número do asteróide atual
-    MOV     R2, 6                           
-    MUL     R5, R2                          ; multiplicamos por 6 (3 words)
-
-    SHL     R0, 2                           ; multiplicamos por 2
-
-    MOV     R1, ASTEROIDES                  ; tabela dos asteróides
-    ADD     R1, R5                          ; asteróide a mover
-    MOV     R2, [R1]                        ; ecrã do asteróide
-    MOV     [SELECIONA_ECRA], R2            ; seleciona o ecrã
-    MOV     [APAGA_ECRA], R2                ; apaga o ecrã
-
-    MOV     R2, [R1+2]                      ; tipo do asteróide
-    MOV     R3, AST_BOM                     ; simboliza um asteróide bom
-    CMP     R2, R3                          ; o asteróide é bom?
-    JZ      move_bom                        ; se sim, procede como tal
-    MOV     R9, DEF_ASTEROIDE_MAU           ; definição do asteróide mau
-
-exit_move_bom:
-    MOV     R1, POS_AST                     ; posição dos asteróides
-    ADD     R1, R0                          ; posição do asteróide a mover
-
-    MOV     R2, MOV_AST                     ; movimentos dos asteróides
-    ADD     R2, R0                          ; movimentos do asteróide a tratar
-    MOV     R2, [R2]                        ; movimento vertical
-    MOV     R3, [R1]                        ; linha do asteróide
-    ADD     R3, 1                           ; nova linha do asteróide
-    MOV     [R1], R3                        ; atualiza a linha do asteróide
-    MOV     R3, [R1+2]                      ; coluna do asteróide
-    ADD     R3, R2                          ; nova coluna do asteróide
-    MOV     [R1+2], R3                      ; atualiza a coluna do asteróide
-    MOV     R0, R1                          ; mete no registo certo
-    MOV     R1, R9                          ; mete no registo certo   
-    CALL    desenha_objeto                  ; desenha o asteróide
-
-    POP     R9
-    POP     R3
-    POP     R2
-    POP     R1
-    POP     R0
-    RET
-
-move_bom:
-    MOV     R9, DEF_ASTEROIDE_BOM           ; definição do asteróide bom
-    JMP     exit_move_bom
-
-
-;testa_limites:
-;    MOV     R5, LINHA_MAX
-;    CMP     R2, R5                          ; Compara a linha final do ecrã com a do asteróide
-;    JNZ     exit_testa_limites
-;
-;;    MOV     [R1+4], OFF                     ; Ao passar dos limites o asteróide é "desligado" para ser recriado no próximo ciclo
