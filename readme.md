@@ -6,39 +6,15 @@
 
 ##### A fazer:
 
-- ~~Sondas diagonais~~
-- ~~Sondas a mexer com interrupções~~
-- ~~Asteroides mineráveis~~
-- ~~Asteroides com diferentes movimentos~~
-- ~~Asteroide a mexer com interrupções~~
-- ~~Gerador de asteroides~~
-- Colisões
-- ~~Interrupção para baixar a energia~~
-- ~~Não meter energia abaixo de 0~~
-- ~~Função de mudar a energia por argumentos~~
-- ~~Pausa~~
-
-###### Processos:
-
-- ~~Teclado~~
-- ~~Controlo~~
-- ~~Nave~~
-- ~~Energia~~
-- ~~Sonda~~
-- ~~Asteroide~~
-
-###### Pausa:
-
-- ~~Nave~~
-- ~~Energia~~
-- ~~Sonda~~
-- ~~Asteroide~~
-
----
+- Animações da colisão
+- Asteróides não são apagados na colisão
+- Sondas não são apagadas na colisão
+- Reiniciar as variáveis dos asteróides na parte de criar o asteroide e não no fim
 
 ##### A corrigir:
 
-* ~~Conversor hexadecimal~~
+* Asteroides não estão a ser bem verificados (a nível de colisões com a nave)
+* Ao pressionar numa tecla isso faz com que o jogo pare
 
 ---
 
