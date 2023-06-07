@@ -57,6 +57,8 @@ SOM_ASTEROIDE_DESCE         EQU 4           ; número do som quando o asteróide
 SOM_TEMA_PAUSA              EQU 5           ; número da música de fundo quando se pausa o jogo
 SOM_TEMA_JOGO               EQU 6           ; número da música de fundo que toca ao longo do jogo
 SOM_PAUSA_EFFECT            EQU 7           ; número do som de efeito da pausa
+SOM_ASTEROIDE_BOM           EQU 8           ; número do som do efeito de colisao do asteroide bom
+SOM_ASTEROIDE_MAU           EQU 9           ; número do som do efeito de colisao do asteroide mau
 
 ; Cores
 COR_SONDA                   EQU 0FF00H
@@ -723,6 +725,101 @@ game_over_energia:
     POP     R0
     RET
 
+sonda_esquerda_controlo:
+    CALL    sonda_controlo_inicializacoes   ; mete os valores nos registos certos
+    MOV     R8, COLUNA_SONDA_ESQ
+    CALL    cria_sonda                      ; cria a sonda da esquerda
+    JMP     processo_controlos              ; volta ao ciclo principal
+
+sonda_meio_controlo:
+    CALL    sonda_controlo_inicializacoes   ; mete as tabelas nos registos certos
+    ADD     R1, 6                           ; 6 porque cada word são 2 bytes
+    ADD     R2, 2                           ; 2 porque cada word são 2 bytes
+    ADD     R3, 4                           ; 4 porque cada word são 2 bytes
+    MOV     R8, COLUNA_SONDA_MEIO
+    CALL    cria_sonda                      ; cria a sonda do meio
+    JMP     processo_controlos              ; volta ao ciclo principal
+
+sonda_direita_controlo:
+    CALL    sonda_controlo_inicializacoes
+    MOV     R4, 12
+    ADD     R1, R4                          ; 12 porque cada word são 2 bytes
+    ADD     R2, 4                           ; 4 porque cada word são 2 bytes
+    MOV     R4, 8
+    ADD     R3, R4                          ; 8 porque cada word são 2 bytes
+    MOV     R8, COLUNA_SONDA_DIR
+    CALL    cria_sonda                      ; cria a sonda da direita
+    JMP     processo_controlos              ; volta ao ciclo principal
+
+; ****************************************************************************
+; SONDA_CONTROLO_INICIALIZACOES
+; Descrição: Mete os valores nos registos certos para criar uma sonda.
+; Entradas:  -------------------------------------
+; Saídas:    R1 - tabela das sondas
+;            R2 - tabela dos movimentos das sondas
+;            R3 - tabela das posições das sondas
+; ****************************************************************************
+sonda_controlo_inicializacoes:
+    MOV     R1, SONDAS                      ; tabela das sondas
+    MOV     R2, MOV_SONDA                   ; tabela dos movimentos das sondas
+    MOV     R3, POS_SONDAS                  ; tabela das posições das sondas
+    RET
+
+; ****************************************************************************
+; CRIA_SONDA
+; Descrição: Cria uma sonda.
+; Entradas:  R1 - tabela das sondas
+;            R2 - tabela dos movimentos das sondas
+;            R3 - tabela das posições das sondas
+;            R8 - coluna inicial da sonda
+; Saídas:    -------------------------------------
+; ****************************************************************************
+cria_sonda:
+    PUSH    R2
+    PUSH    R3
+    PUSH    R4
+    PUSH    R5
+    PUSH    R6
+
+    MOV     R4, [R1]                        ; estado da sonda
+    CMP     R4, ON                          ; a sonda já existe (?)
+    JZ      exit_cria_sonda                 ; se sim, sai da rotina
+
+    MOV     R5, LINHA_SONDA
+    MOV     [R3], R5                        ; reinicia a linha
+    MOV     [R3+2], R8                      ; reinicia a coluna
+
+    MOV     R4, ON                          ; simboliza sonda ligada
+    MOV     [R1], R4                        ; atualiza o estado da sonda
+
+    MOV     R4, MOVIMENTOS                  ; nº máximo de movimentos de uma sonda
+    MOV     [R1+2], R4                      ; atualiza o nº de movimentos restantes da sonda
+
+    MOV     R4, SOM_LASER                   ; endereço do som do laser
+    MOV     [DEFINE_SOM_OU_VIDEO], R4       ; seleciona o som
+    MOV     [INICIA_REPRODUCAO], R4         ; reproduz o som
+
+    MOV     R4, [R1+4]                      ; ecrã da sonda
+    MOV     [SELECIONA_ECRA], R4            ; seleciona o ecrã
+
+    MOV     R6, COR_SONDA                   ; cor da sonda
+    MOV     R2, [R3]                        ; copia a linha da sonda
+    MOV     R3, [R3+2]                      ; copia a coluna da sonda
+
+    CALL    desenha_pixel                   ; desenha a sonda
+
+    MOV     R2, -5                          ; energia a perder com a sonda
+    CALL    altera_energia                  ; diminui a energia
+
+exit_cria_sonda:
+    POP     R6
+    POP     R5
+    POP     R4
+    POP     R3
+    POP     R2
+    RET
+
+
 ; ****************************************************************************
 ; GAME_OVER
 ; Descrição: Termina o jogo.
@@ -758,92 +855,8 @@ game_over_ciclo:
     POP     R1
     POP     R0
     RET
-
-sonda_esquerda_controlo:
-    CALL    sonda_controlo_inicializacoes   ; mete os valores nos registos certos
-    CALL    cria_sonda                      ; cria a sonda da esquerda
-    JMP     processo_controlos              ; volta ao ciclo principal
-
-sonda_meio_controlo:
-    CALL    sonda_controlo_inicializacoes   ; mete as tabelas nos registos certos
-    ADD     R1, 6                           ; 6 porque cada word são 2 bytes
-    ADD     R2, 2                           ; 2 porque cada word são 2 bytes
-    ADD     R3, 4                           ; 4 porque cada word são 2 bytes
-    CALL    cria_sonda                      ; cria a sonda do meio
-    JMP     processo_controlos              ; volta ao ciclo principal
-
-sonda_direita_controlo:
-    CALL    sonda_controlo_inicializacoes
-    MOV     R4, 12
-    ADD     R1, R4                          ; 12 porque cada word são 2 bytes
-    ADD     R2, 4                           ; 4 porque cada word são 2 bytes
-    MOV     R4, 8
-    ADD     R3, R4                          ; 8 porque cada word são 2 bytes
-    CALL    cria_sonda                      ; cria a sonda da direita
-    JMP     processo_controlos              ; volta ao ciclo principal
-
-; ****************************************************************************
-; SONDA_CONTROLO_INICIALIZACOES
-; Descrição: Mete os valores nos registos certos para criar uma sonda.
-; Entradas:  -------------------------------------
-; Saídas:    R1 - tabela das sondas
-;            R2 - tabela dos movimentos das sondas
-;            R3 - tabela das posições das sondas
-; ****************************************************************************
-sonda_controlo_inicializacoes:
-    MOV     R1, SONDAS                      ; tabela das sondas
-    MOV     R2, MOV_SONDA                   ; tabela dos movimentos das sondas
-    MOV     R3, POS_SONDAS                  ; tabela das posições das sondas
-    RET
-
-; ****************************************************************************
-; CRIA_SONDA
-; Descrição: Cria uma sonda.
-; Entradas:  R1 - tabela das sondas
-;            R2 - tabela dos movimentos das sondas
-;            R3 - tabela das posições das sondas
-; Saídas:    -------------------------------------
-; ****************************************************************************
-cria_sonda:
-    PUSH    R2
-    PUSH    R3
-    PUSH    R4
-    PUSH    R6
-
-    MOV     R4, [R1]                        ; estado da sonda
-    CMP     R4, ON                          ; a sonda já existe (?)
-    JZ      exit_cria_sonda                 ; se sim, sai da rotina
-
-    MOV     R4, ON                          ; simboliza sonda ligada
-    MOV     [R1], R4                        ; atualiza o estado da sonda
-
-    MOV     R4, MOVIMENTOS                  ; nº máximo de movimentos de uma sonda
-    MOV     [R1+2], R4                      ; atualiza o nº de movimentos restantes da sonda
-
-    MOV     R4, SOM_LASER                   ; endereço do som do laser
-    MOV     [DEFINE_SOM_OU_VIDEO], R4       ; seleciona o som
-    MOV     [INICIA_REPRODUCAO], R4         ; reproduz o som
-
-    MOV     R4, [R1+4]                      ; ecrã da sonda
-    MOV     [SELECIONA_ECRA], R4            ; seleciona o ecrã
-
-    MOV     R6, COR_SONDA                   ; cor da sonda
-    MOV     R2, [R3]                        ; copia a linha da sonda
-    MOV     R3, [R3+2]                      ; copia a coluna da sonda
-
-    CALL    desenha_pixel                   ; desenha a sonda
-
-    MOV     R2, -5                          ; energia a perder com a sonda
-    CALL    altera_energia                  ; diminui a energia
-
-exit_cria_sonda:
-    POP     R6
-    POP     R4
-    POP     R3
-    POP     R2
-    RET
-
-
+; manda print
+; funcionou e assinalou a colisão mas depois deu erro; overwrite
 ; ****************************************************************************
 ; Processo Asteroides
 ; Descrição: Move os asteróides periodicamente.
@@ -1164,6 +1177,7 @@ move_sonda:
 
     MOV     R3, [R6+4]                      ; ecrã da sonda
     CALL    move_objeto                     ; move a sonda
+
     CALL    testa_colisao_sonda             ; testa se houve uma colisão com um asteróide
 
 exit_verifica:
@@ -1242,7 +1256,7 @@ ciclo_testa_asteroide:
     CMP     R3, R4                          ; a coluna direita do asteróide está à esquerda da sonda (?)
     JLT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
 
-    MOV     R7, 1000
+    CALL    colisao_geral
     ; se chega aqui entao houve colisao
 proximo_ciclo:
     ADD     R1, 1
@@ -1256,6 +1270,100 @@ exit_testa_colisao_sonda:
     POP     R2
     POP     R1
     RET
+
+; ****************************************************************************
+; colisao_geral
+; Descrição: Trata da colisão de uma sonda com um asteróide.
+; Entradas:  R1 - Número do asteróide
+;            R9 - Número da sonda
+; Saídas:    -------------------------------
+; ****************************************************************************
+colisao_geral:
+    PUSH    R0
+    PUSH    R2
+    PUSH    R3
+    PUSH    R4
+    PUSH    R5
+    PUSH    R6
+    PUSH    R7
+    PUSH    R8
+    PUSH    R9
+    PUSH    R10
+    PUSH    R11             
+    ; SONDA
+    MOV     R2, SONDAS                      ; endereço da tabela das sondas
+
+    MOV     R5, R9                          ; copia o número da sonda
+    MOV     R4, 6
+    MUL     R5, R4                          ; multiplica por 6
+    ADD     R2, R5                          ; sonda a tratar
+
+    MOV     R6, [R2+4]                      ; vai buscar o valor do ecrã da sonda
+    MOV     [SELECIONA_ECRA], R6            ; seleciona o ecrã da sonda
+
+    MOV     [APAGA_ECRA], R6                ; apaga a sonda
+
+    MOV     R6, OFF                         ; simboliza que a sonda vai ser desligada
+    MOV     [R2], R6                        ; desativa a sonda
+
+    ; ASTEROIDE
+    MOV     R3, ASTEROIDES                  ; endereço da tabela dos asteróides
+    
+    MOV     R0, R1                          ; copia o número do asteróide
+    SHL     R0, 3                           ; multiplica por 8
+    ADD     R3, R0                          ; asteróide a tratar
+
+    MOV     R6, [R3]                        ; ecrã do asteróide
+    MOV     [SELECIONA_ECRA], R6            ; seleciona o ecrã
+
+    MOV     [APAGA_ECRA], R6                ; apaga o asteroide
+
+    MOV     R0, POS_AST                     ; tabela da posição dos asteróides
+    MOV     R8, R1                          ; copia o valor do número do asteroide para R8
+    SHL     R8, 2                           ; multiplica por 8
+    ADD     R0, R8                          ; posição do asteróide a tratar
+
+    MOV     R2, [R3+2]                      ; tipo do asteroide
+    CMP     R2, 1                           ; o asteróide é bom (?)
+    JZ      colisao_asteroide_bom           ; se sim, procede conforme
+
+    ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
+    
+
+    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; definição da animação da explosão do asteróide mau
+   
+exit_colisao_bom:
+    CALL    desenha_objeto                  
+    ;MOV     [DEFINE_SOM_OU_VIDEO], Rx       ; seleciona o efeito sonoro anterior
+    ;MOV     [INICIA_REPRODUCAO], Rx         ; toca o efeito sonoro
+    
+    MOV     R4, OFF
+    MOV     [R3+2], R4                      ; estado do asteróide
+
+
+
+
+
+    POP     R11
+    POP     R10
+    POP     R9
+    POP     R8
+    POP     R7
+    POP     R6
+    POP     R5
+    POP     R4
+    POP     R3
+    POP     R2 
+    POP     R0
+    RET
+
+colisao_asteroide_bom:
+    ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
+
+    MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; definição da animação da explosão do asteróide mau
+    MOV     R2, 25                          ; energia a adicionar
+    CALL    altera_energia                  ; aumenta a energia
+    JMP     exit_colisao_bom
 
 
 ; ****************************************************************************
