@@ -769,7 +769,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "testes/final/gameover-fixed copy.asm",
+    "programFilePathName" : "testes/final/Asteroide.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1570,6 +1570,18 @@
       "playAsClip" : false
     }, {
       "filePathName" : "media/main.wav",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
+      "filePathName" : "media/pausa_effect.wav",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
+      "filePathName" : "media/start_effect.wav",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
