@@ -461,79 +461,28 @@ start:
     MOV     R1, DEF_NAVE                    ; protótipo da nave
     CALL    desenha_objeto                  ; desenha a nave
 
-reinicia_variaveis_sonda:
-    MOV     R0, SONDAS                      ; endereço da tabela das sondas
-    MOV     R1, OFF                         ; estado OFF
+reincia_sondas:
+    MOV     R9, 0                           ; primeira sonda (esquerda)
+    MOV     R1, R9                          ; cópia o nº da sonda
+    SHL     R1, 2                           ; valor a adicionar à tabela da posição das sondas
+    MOV     R0, POS_SONDAS                  ; tabela da posição das sondas
+    ADD     R0, R1                          ; posição da sonda a reiniciar
+    MOV     R6, SONDAS                      ; tabela das sondas
+    MOV     R1, R9                          ; cópia o nº da sonda
+    MOV     R2, 6                           ; 6 porque cada word são 2 bytes (3 words)
+    MUL     R1, R2                          ; valor a adicionar à tabela das sondas
+    ADD     R6, R1                          ; sonda a reiniciar na tabela das sondas
+    MOV     R8, R9                          ; copia o nº da sonda
+    SHL     R8, 1                           ; valor a adicionar à tabela da coluna inicial das sondas
 
-    MOV     [R0], R1                        ; reinicia o estado da sonda 1
-    ADD     R0, 6
-    MOV     [R0], R1                        ; reinicia o estado da sonda 2
-    ADD     R0, 6
-    MOV     [R0], R1                        ; reinicia o estado da sonda 3
+ciclo_reinicia_sonda:
+    CMP     R9, NUM_SONDAS                  ; chegou à última sonda (?)
+    JZ      reinicia_variaveis_asteroides   ; se sim, reinicia os asteróides  
 
-;reinicia_variaveis_sonda:
-;    MOV     R0, 0                           ; primeira sonda
-;
-;ciclo_reiniciar_variaveis_sondas:
-;    CMP     R0, 3                           ; já reiniciou todas as sondas (?)
-;    JZ      ciclo_reiniciar_asteroides      ; se sim, reinicia os asteróides
-;
-;    MOV     R1, SONDAS                      ; endereço da tabela das sondas
-;    MOV     R2, 6                           ; 6 porque cada word são 2 bytes (3 words)
-;    MUL     R2, R0                          ; valor a acrescentar à tabela das sondas (3 variáveis)
-;    ADD     R1, R2                          ; sonda atual
-;    MOV     R2, OFF
-;    MOV     [R1], R2                        ; mete o estado da sonda a OFF
-;
-;    MOV     R1, POS_SONDAS                  ; endereço da tabela da posição das sondas
-;    MOV     R2, R0                          ; copia o nº da sonda
-;    SHL     R2, 2                           ; 4 porque cada word são 2 bytes (2 words)
-;    ADD     R1, R2                          ; posição da sonda atual
-;    MOV     R2, LINHA_SONDA                 ; linha inicial das sondas
-;    MOV     [R1], R2                        ; reinicia a linha da sonda
-;    MOV     R2, COLUNAS_SONDAS              ; colunas iniciais das sondas
-;    MOV     R3, R0                          ; cópia do nº da sonda
-;    SHL     R3, 1                           ; 2 porque cada word são 2 bytes (1 word)
-;    ADD     R2, R3                          ; endereço da coluna inicial da sonda
-;    MOV     R2, [R2]                        ; coluna inicial da sonda
-;    MOV     [R1+2], R2                      ; reinicia a coluna da sonda
-;
-;    ADD     R0, 1                           ; próxima sonda
-;    JMP     ciclo_reiniciar_variaveis_sondas
+    CALL    reinicia_sonda                  ; move a sonda
 
-;reinicia_variaveis_asteroides:
-;    MOV     R0, ASTEROIDES                  ; tabela dos asteróides
-;    MOV     R1, 0                           ; primeiro asteróide
-;
-;ciclo_reiniciar_asteroides:
-;    CMP     R1, NUM_ASTEROIDES              ; é o último (?)
-;    JZ      main                            ; se sim, passa para a main
-;
-;    MOV     R4, R1                          ; copia o número do asteróide
-;    SHL     R4, 3                           ; valor a adicionar à tabela de 4 variáveis
-;
-;    MOV     R3, R0                          ; cópia da tabela dos asteróides
-;    ADD     R3, R4                          ; tabela do asteróide a reiniciar
-;
-;    MOV     R2, 0
-;    ADD     R3, 2
-;    MOV     [R3], R2                      ; muda o tipo para 0
-;    ADD     R3, 4
-;    MOV     [R3], R2                      ; passa o lane para 0
-;    MOV     R2, OFF
-;    SUB     R3, 2
-;    MOV     [R3], R2                      ; muda o estado para OFF
-;
-;    MOV     R5, POS_AST                     ; copia a tabela das posições dos asteróides 
-;    MOV     R4, R1                          ; copia o número do asteróide para R4
-;    SHL     R4, 2                           ; multiplica por 4
-;    ADD     R5, R4                          ; adiciona o valor do asteróide (tendo em conta as words) na tabela
-;    MOV     R4, 0
-;    MOV     [R5], R4                        ; reseta a linha do asteroide a 0
-;
-;    ADD     R1, 1                           ; próximo asteróide
-;
-;    JMP     ciclo_reiniciar_asteroides
+    ADD     R9, 1                           ; sonda seguinte
+    JMP     ciclo_reinicia_sonda            ; repete o ciclo
 
 reinicia_variaveis_asteroides:
     MOV     R0, ASTEROIDES
@@ -859,6 +808,285 @@ game_over_ciclo:
     POP     R0
     RET
 
+
+; ****************************************************************************
+; Processo Sondas
+; Descrição: Dispara uma sonda consoante a tecla pressionada.
+; ****************************************************************************
+PROCESS SP_sondas
+
+processo_sondas:
+    MOV     R10, evento_int                 ; tabela das ocorrências das interrupções
+    MOV     R10, [R10+2]                    ; ocorrência da interrupção 1
+
+    MOV     R11, [PAUSA]                    ; estado atual do jogo
+    CMP     R11, 1                          ; o jogo está pausado (?)
+    JZ      processo_sondas                 ; se sim, repete o ciclo
+
+    MOV     R9, 0                           ; primeira sonda (esquerda)
+
+ciclo_sonda:
+    CMP     R9, NUM_SONDAS                  ; chegou à última sonda (?)
+    JZ      processo_sondas                 ; se sim, repete o ciclo principal
+
+    CALL    move_sonda                      ; move a sonda
+
+    ADD     R9, 1                           ; sonda seguinte
+    JMP     ciclo_sonda                     ; repete o ciclo
+
+; ****************************************************************************
+; MOVE_SONDA
+; Descrição: Move uma sonda.
+; Entradas:  R9 - Número da sonda
+; Saídas:    --------------------
+; ****************************************************************************
+move_sonda:
+    PUSH    R0
+    PUSH    R1
+    PUSH    R2
+    PUSH    R3
+    PUSH    R4
+    PUSH    R6
+    PUSH    R7
+    PUSH    R8
+    PUSH    R9
+
+    MOV     R5, R9                          ; copia o nº da sonda
+    MOV     R7, R9                          ; copia o nº da sonda
+    MOV     R8, 6                           ; 6 porque cada word ocupa 2 bytes (3 words)
+    MUL     R7, R8                          ; valor a adicionar às tabelas de 3 variáveis
+    MOV     R8, R9                          ; copia o nº da sonda
+    SHL     R8, 1                           ; valor a adicionar à tabela de 1 variável
+    SHL     R9, 2                           ; valor a adicionar às tabelas de 2 variáveis
+
+    MOV     R0, POS_SONDAS                  ; tabela da posição das sondas
+    ADD     R0, R9                          ; posição da sonda
+    MOV     R1, DEF_SONDA                   ; definição da sonda
+    
+    MOV     R2, MOVS_SONDA                  ; tabela dos movimentos das sondas
+    ADD     R2, R9                          ; movimentos da sonda
+    MOV     R6, SONDAS                      ; tabela das sondas
+    ADD     R6, R7                          ; sonda a tratar
+
+    MOV     R4, [R6]                        ; estado da sonda
+    CMP     R4, ON                          ; a sonda já existe (?)
+    JNZ     exit_move                       ; se não, passa para a sonda seguinte
+
+    MOV     R4, [R6+2]                      ; movimentos restantes da sonda
+    CMP     R4, 0                           ; já realizou todos os movimentos (?)
+    JZ      reinicia_sonda_smth             ; se sim, reinicia a sonda
+
+    SUB     R4, 1                           ; menos 1 movimento restante
+    MOV     [R6+2], R4                      ; atualiza os movimentos da sonda
+
+    MOV     R3, [R6+4]                      ; ecrã da sonda
+    CALL    move_objeto                     ; move a sonda
+
+    MOV     R9, R5                          ; nº da sonda
+    CALL    testa_colisao_sonda             ; testa se houve uma colisão com um asteróide
+
+exit_move:
+    POP     R9
+    POP     R8
+    POP     R7
+    POP     R6
+    POP     R4
+    POP     R3
+    POP     R2
+    POP     R1
+    POP     R0
+    RET
+
+reinicia_sonda_smth:
+    CALL    reinicia_sonda
+    JMP     exit_move
+
+; ****************************************************************************
+; REINICIA_SONDA
+; Descrição: Reinicia a sonda.
+; Entradas:  R0 - Endereço da tabela da posição da sonda
+;            R6 - Endereço da tabela da sonda
+;            R8 - Valor a adicionar na tabela das colunas das sondas
+; Saídas:    -------------------------------------------------------
+; ****************************************************************************
+reinicia_sonda:
+    PUSH    R1
+    PUSH    R4
+
+    MOV     R4, [R6+4]                      ; ecrã da sonda
+    MOV     [SELECIONA_ECRA], R4            ; seleciona o ecrã
+    MOV     [APAGA_ECRA], R4                ; apaga o ecrã
+
+    MOV     R4, OFF                         ; simboliza sonda desligada
+    MOV     [R6], R4                        ; desliga a sonda
+
+    MOV     R4, R0                          ; posição da sonda
+    MOV     R1, LINHA_SONDA                 ; linha inicial das sondas
+    MOV     [R4], R1                        ; reinicia a linha
+
+    MOV     R1, COLUNAS_SONDAS              ; tabela das colunas iniciais das sondas
+    ADD     R1, R8                          ; endereço da coluna inicial da sonda
+    MOV     R1, [R1]                        ; coluna inicial da sonda
+    MOV     [R4+2], R1                      ; reinicia a coluna
+
+    POP     R4
+    POP     R1
+    RET
+
+; ****************************************************************************
+; TESTA_COLISAO_SONDA
+; Descrição: Verifica se a sonca colidiu com um asteróide.
+; Entradas:  R0 - Tabela posição sonda atual
+;            R9 - Número da sonda
+; Saídas:    -------------------------------
+; ****************************************************************************
+testa_colisao_sonda:
+    PUSH    R1
+    PUSH    R2
+    PUSH    R3
+    PUSH    R4
+    PUSH    R5
+    
+    MOV     R1, 0                           ; primeiro asteróide
+    MOV     R2, POS_AST                     ; tabela da posição dos asteróides
+
+ciclo_testa_asteroide:
+    CMP     R1, NUM_ASTEROIDES
+    JZ      exit_testa_colisao_sonda
+
+    MOV     R5, R1                          ; nº do asteróide
+    SHL     R5, 2                           ; valor a adicionar à tabela da posição dos asteróides (2 variáveis)
+    ADD     R2, R5                          ; tabela da posição do asteróide atual
+
+    MOV     R4, [R0]                        ; linha da sonda
+    MOV     R3, [R2]                        ; linha do asteróide
+
+    CMP     R3, R4                          ; a linha superior do asteróide está abaixo (?)
+    JGT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
+
+    ADD     R3, ALTURA_5                    ; adiciona a altura
+    CMP     R3, R4                          ; a linha inferior do asteróide está acima da sonda (?)
+    JLT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
+    
+    MOV     R4, [R0+2]                      ; coluna da sonda
+    MOV     R3, [R2+2]                      ; coluna do asteróide
+
+    CMP     R3, R4                          ; a coluna esquerda do asteróide está à direita (?)
+    JGT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
+
+    ADD     R3, LARGURA_5                   ; adiciona a largura
+    CMP     R3, R4                          ; a coluna direita do asteróide está à esquerda da sonda (?)
+    JLT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
+
+    CALL    colisao_geral
+    ; se chega aqui entao houve colisao
+proximo_ciclo:
+    ADD     R1, 1
+    JMP     ciclo_testa_asteroide
+    
+exit_testa_colisao_sonda:
+    POP     R5
+    POP     R4
+    POP     R3
+    POP     R2
+    POP     R1
+    RET
+
+; ****************************************************************************
+; colisao_geral
+; Descrição: Trata da colisão de uma sonda com um asteróide.
+; Entradas:  R1 - Número do asteróide
+;            R9 - Número da sonda
+; Saídas:    -------------------------------
+; ****************************************************************************
+colisao_geral:
+    PUSH    R0
+    PUSH    R2
+    PUSH    R3
+    PUSH    R4
+    PUSH    R5
+    PUSH    R6
+    PUSH    R7
+    PUSH    R8
+    PUSH    R9
+    PUSH    R10
+    PUSH    R11             
+    ; SONDA
+    MOV     R2, SONDAS                      ; endereço da tabela das sondas
+
+    MOV     R5, R9                          ; copia o número da sonda
+    MOV     R4, 6
+    MUL     R5, R4                          ; multiplica por 6
+    ADD     R2, R5                          ; sonda a tratar
+
+    MOV     R6, [R2+4]                      ; vai buscar o valor do ecrã da sonda
+    MOV     [SELECIONA_ECRA], R6            ; seleciona o ecrã da sonda
+
+    MOV     [APAGA_ECRA], R6                ; apaga a sonda
+
+    MOV     R6, OFF                         ; simboliza que a sonda vai ser desligada
+    MOV     [R2], R6                        ; desativa a sonda
+
+    ; ASTEROIDE
+    MOV     R3, ASTEROIDES                  ; endereço da tabela dos asteróides
+    
+    MOV     R0, R1                          ; copia o número do asteróide
+    SHL     R0, 3                           ; multiplica por 8
+    ADD     R3, R0                          ; asteróide a tratar
+
+    MOV     R6, [R3]                        ; ecrã do asteróide
+    MOV     [SELECIONA_ECRA], R6            ; seleciona o ecrã
+
+    MOV     [APAGA_ECRA], R6                ; apaga o asteroide
+
+    MOV     R0, POS_AST                     ; tabela da posição dos asteróides
+    MOV     R8, R1                          ; copia o valor do número do asteroide para R8
+    SHL     R8, 2                           ; multiplica por 8
+    ADD     R0, R8                          ; posição do asteróide a tratar
+
+    MOV     R2, [R3+2]                      ; tipo do asteroide
+    CMP     R2, 1                           ; o asteróide é bom (?)
+    JZ      colisao_asteroide_bom           ; se sim, procede conforme
+
+    ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
+    
+
+    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; definição da animação da explosão do asteróide mau
+   
+exit_colisao_bom:
+    ;CALL    desenha_objeto                  
+    ;MOV     [DEFINE_SOM_OU_VIDEO], Rx       ; seleciona o efeito sonoro anterior
+    ;MOV     [INICIA_REPRODUCAO], Rx         ; toca o efeito sonoro
+    
+    MOV     R4, OFF
+    MOV     [R3+2], R4                      ; estado do asteróide
+
+
+
+
+
+    POP     R11
+    POP     R10
+    POP     R9
+    POP     R8
+    POP     R7
+    POP     R6
+    POP     R5
+    POP     R4
+    POP     R3
+    POP     R2 
+    POP     R0
+    RET
+
+colisao_asteroide_bom:
+    ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
+
+    MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; definição da animação da explosão do asteróide mau
+    MOV     R2, 25                          ; energia a adicionar
+    CALL    altera_energia                  ; aumenta a energia
+    JMP     exit_colisao_bom
+
+
 ; ****************************************************************************
 ; Processo Asteroides
 ; Descrição: Move os asteróides periodicamente.
@@ -1107,265 +1335,6 @@ termina_jogo_asteroide:
     CALL    game_over_colisao               ; termina o jogo
     MOV     R7, COLISAO_NAVE                ; indica que houve uma colisão com a nave
     JMP     exit_testa_limites
-
-
-; ****************************************************************************
-; Processo Sondas
-; Descrição: Dispara uma sonda consoante a tecla pressionada.
-; ****************************************************************************
-PROCESS SP_sondas
-
-processo_sondas:
-    MOV     R10, evento_int                 ; tabela das ocorrências das interrupções
-    MOV     R10, [R10+2]                    ; ocorrência da interrupção 1
-
-    MOV     R11, [PAUSA]                    ; estado atual do jogo
-    CMP     R11, 1                          ; o jogo está pausado (?)
-    JZ      processo_sondas                 ; se sim, repete o ciclo
-
-    MOV     R9, 0                           ; primeira sonda (esquerda)
-
-ciclo_sonda:
-    CMP     R9, NUM_SONDAS                  ; chegou à última sonda (?)
-    JZ      processo_sondas                 ; se sim, repete o ciclo principal
-
-    CALL    move_sonda                      ; move a sonda
-
-    ADD     R9, 1                           ; sonda seguinte
-    JMP     ciclo_sonda                     ; repete o ciclo
-
-; ****************************************************************************
-; MOVE_SONDA
-; Descrição: Move uma sonda.
-; Entradas:  R9 - Número da sonda
-; Saídas:    --------------------
-; ****************************************************************************
-move_sonda:
-    PUSH    R0
-    PUSH    R1
-    PUSH    R2
-    PUSH    R3
-    PUSH    R4
-    PUSH    R6
-    PUSH    R7
-    PUSH    R8
-    PUSH    R9
-
-    MOV     R5, R9                          ; copia o nº da sonda
-    MOV     R7, R9                          ; copia o nº da sonda
-    MOV     R8, 6                           ; 6 porque cada word ocupa 2 bytes (3 words)
-    MUL     R7, R8                          ; valor a adicionar às tabelas de 3 variáveis
-    MOV     R8, R9                          ; copia o nº da sonda
-    SHL     R8, 1                           ; valor a adicionar à tabela de 1 variável
-    SHL     R9, 2                           ; valor a adicionar às tabelas de 2 variáveis
-
-    MOV     R0, POS_SONDAS                  ; tabela da posição das sondas
-    ADD     R0, R9                          ; posição da sonda
-    MOV     R1, DEF_SONDA                   ; definição da sonda
-    MOV     R2, MOVS_SONDA                  ; tabela dos movimentos das sondas
-    ADD     R2, R9                          ; movimentos da sonda
-    MOV     R6, SONDAS                      ; tabela das sondas
-    ADD     R6, R7                          ; sonda a tratar
-
-    MOV     R4, [R6]                        ; estado da sonda
-    CMP     R4, ON                          ; a sonda já existe (?)
-    JNZ     exit_verifica                   ; se não, passa para a sonda seguinte
-
-    MOV     R4, [R6+2]                      ; movimentos restantes da sonda
-    CMP     R4, 0                           ; já realizou todos os movimentos (?)
-    JZ      reinicia_sonda                  ; se sim, reinicia a sonda
-
-    SUB     R4, 1                           ; menos 1 movimento restante
-    MOV     [R6+2], R4                      ; atualiza os movimentos da sonda
-
-    MOV     R3, [R6+4]                      ; ecrã da sonda
-    CALL    move_objeto                     ; move a sonda
-
-    MOV     R9, R5                          ; nº da sonda
-    CALL    testa_colisao_sonda             ; testa se houve uma colisão com um asteróide
-
-exit_move:
-    POP     R9
-    POP     R8
-    POP     R7
-    POP     R6
-    POP     R4
-    POP     R3
-    POP     R2
-    POP     R1
-    POP     R0
-    RET
-
-reinicia_sonda:
-    MOV     R4, [R6+4]                      ; ecrã da sonda
-    MOV     [SELECIONA_ECRA], R4            ; seleciona o ecrã
-    MOV     [APAGA_ECRA], R4                ; apaga o ecrã
-
-    MOV     R4, OFF                         ; simboliza sonda desligada
-    MOV     [R6], R4                        ; desliga a sonda
-
-    MOV     R4, R0                          ; posição da sonda
-    MOV     R1, LINHA_SONDA                 ; linha inicial das sondas
-    MOV     [R4], R1                        ; reinicia a linha
-
-    MOV     R1, COLUNAS_SONDAS              ; tabela das colunas iniciais das sondas
-    ADD     R1, R8                          ; endereço da coluna inicial da sonda
-    MOV     R1, [R1]                        ; coluna inicial da sonda
-    MOV     [R4+2], R1                      ; reinicia a coluna
-    JMP     exit_move                       ; passa para a sonda seguinte
-
-; ****************************************************************************
-; TESTA_COLISAO_SONDA
-; Descrição: Verifica se a sonca colidiu com um asteróide.
-; Entradas:  R0 - Tabela posição sonda atual
-;            R9 - Número da sonda
-; Saídas:    -------------------------------
-; ****************************************************************************
-testa_colisao_sonda:
-    PUSH    R1
-    PUSH    R2
-    PUSH    R3
-    PUSH    R4
-    PUSH    R5
-    
-    MOV     R1, 0                           ; primeiro asteróide
-    MOV     R2, POS_AST                     ; tabela da posição dos asteróides
-
-ciclo_testa_asteroide:
-    CMP     R1, NUM_ASTEROIDES
-    JZ      exit_testa_colisao_sonda
-
-    MOV     R5, R1                          ; nº do asteróide
-    SHL     R5, 2                           ; valor a adicionar à tabela da posição dos asteróides (2 variáveis)
-    ADD     R2, R5                          ; tabela da posição do asteróide atual
-
-    MOV     R4, [R0]                        ; linha da sonda
-    MOV     R3, [R2]                        ; linha do asteróide
-
-    CMP     R3, R4                          ; a linha superior do asteróide está abaixo (?)
-    JGT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
-
-    ADD     R3, ALTURA_5                    ; adiciona a altura
-    CMP     R3, R4                          ; a linha inferior do asteróide está acima da sonda (?)
-    JLT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
-    
-    MOV     R4, [R0+2]                      ; coluna da sonda
-    MOV     R3, [R2+2]                      ; coluna do asteróide
-
-    CMP     R3, R4                          ; a coluna esquerda do asteróide está à direita (?)
-    JGT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
-
-    ADD     R3, LARGURA_5                   ; adiciona a largura
-    CMP     R3, R4                          ; a coluna direita do asteróide está à esquerda da sonda (?)
-    JLT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
-
-    CALL    colisao_geral
-    ; se chega aqui entao houve colisao
-proximo_ciclo:
-    ADD     R1, 1
-    JMP     ciclo_testa_asteroide
-    
-exit_testa_colisao_sonda:
-    POP     R5
-    POP     R4
-    POP     R3
-    POP     R2
-    POP     R1
-    RET
-
-; ****************************************************************************
-; colisao_geral
-; Descrição: Trata da colisão de uma sonda com um asteróide.
-; Entradas:  R1 - Número do asteróide
-;            R9 - Número da sonda
-; Saídas:    -------------------------------
-; ****************************************************************************
-colisao_geral:
-    PUSH    R0
-    PUSH    R2
-    PUSH    R3
-    PUSH    R4
-    PUSH    R5
-    PUSH    R6
-    PUSH    R7
-    PUSH    R8
-    PUSH    R9
-    PUSH    R10
-    PUSH    R11             
-    ; SONDA
-    MOV     R2, SONDAS                      ; endereço da tabela das sondas
-
-    MOV     R5, R9                          ; copia o número da sonda
-    MOV     R4, 6
-    MUL     R5, R4                          ; multiplica por 6
-    ADD     R2, R5                          ; sonda a tratar
-
-    MOV     R6, [R2+4]                      ; vai buscar o valor do ecrã da sonda
-    MOV     [SELECIONA_ECRA], R6            ; seleciona o ecrã da sonda
-
-    MOV     [APAGA_ECRA], R6                ; apaga a sonda
-
-    MOV     R6, OFF                         ; simboliza que a sonda vai ser desligada
-    MOV     [R2], R6                        ; desativa a sonda
-
-    ; ASTEROIDE
-    MOV     R3, ASTEROIDES                  ; endereço da tabela dos asteróides
-    
-    MOV     R0, R1                          ; copia o número do asteróide
-    SHL     R0, 3                           ; multiplica por 8
-    ADD     R3, R0                          ; asteróide a tratar
-
-    MOV     R6, [R3]                        ; ecrã do asteróide
-    MOV     [SELECIONA_ECRA], R6            ; seleciona o ecrã
-
-    MOV     [APAGA_ECRA], R6                ; apaga o asteroide
-
-    MOV     R0, POS_AST                     ; tabela da posição dos asteróides
-    MOV     R8, R1                          ; copia o valor do número do asteroide para R8
-    SHL     R8, 2                           ; multiplica por 8
-    ADD     R0, R8                          ; posição do asteróide a tratar
-
-    MOV     R2, [R3+2]                      ; tipo do asteroide
-    CMP     R2, 1                           ; o asteróide é bom (?)
-    JZ      colisao_asteroide_bom           ; se sim, procede conforme
-
-    ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
-    
-
-    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; definição da animação da explosão do asteróide mau
-   
-exit_colisao_bom:
-    ;CALL    desenha_objeto                  
-    ;MOV     [DEFINE_SOM_OU_VIDEO], Rx       ; seleciona o efeito sonoro anterior
-    ;MOV     [INICIA_REPRODUCAO], Rx         ; toca o efeito sonoro
-    
-    MOV     R4, OFF
-    MOV     [R3+2], R4                      ; estado do asteróide
-
-
-
-
-
-    POP     R11
-    POP     R10
-    POP     R9
-    POP     R8
-    POP     R7
-    POP     R6
-    POP     R5
-    POP     R4
-    POP     R3
-    POP     R2 
-    POP     R0
-    RET
-
-colisao_asteroide_bom:
-    ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
-
-    MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; definição da animação da explosão do asteróide mau
-    MOV     R2, 25                          ; energia a adicionar
-    CALL    altera_energia                  ; aumenta a energia
-    JMP     exit_colisao_bom
 
 
 ; ****************************************************************************
