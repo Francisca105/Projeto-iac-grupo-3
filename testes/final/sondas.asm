@@ -811,7 +811,7 @@ cria_sonda:
     PUSH    R6
 
     MOV     R4, [R1]                        ; estado da sonda
-    CMP     R4, ON                          ; a sonda já existe ( (?))
+    CMP     R4, ON                          ; a sonda já existe (?)
     JZ      exit_cria_sonda                 ; se sim, sai da rotina
 
     MOV     R4, ON                          ; simboliza sonda ligada
@@ -1084,7 +1084,7 @@ reinicia_asteroide:
     MOV     R5, 0                           ; os asteróides começam na linha 0
     MOV     [R3], R5                        ; reinicia a linha do asteróide
     
-    CMP     R4, 2                           ; o asteróide pode colidir com a nave (?)
+    CMP     R4, 2                           ; o asteróide colidiu com a nave (?)
     JLE     termina_jogo_asteroide          ; se sim, termina o jogo
     JMP     exit_testa_limites
 
@@ -1474,8 +1474,6 @@ desenha_painel:
     MOV     R1, [R5+R2]                     ; adiciona o offset dado pelo nº do painel atual
     CALL    desenha_objeto                  ; desenha o painel
     JMP     processo_nave                   ; repete o ciclo
-
-
 
 
 ; ****************************************************************************
