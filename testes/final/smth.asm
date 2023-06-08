@@ -428,8 +428,10 @@ menu:
     CALL    processo_controlos              ; incia o processo controlos
 
 start:
+    MOV     R11, 0                          ; 0 simboliza jogo não pausado e que já foi reiniciado
+    MOV     [REINICIA_JOGO], R11            ; indica que já foi reiniciado o jogo
+
     MOV     R8, PAUSA                       ; endereço do estado atual do jogo
-    MOV     R11, 0                          ; 0 simboliza jogo não pausado
     MOV     [R8], R11                       ; tira o jogo da pausa
 
     MOV     R0, ENERGIA                     ; endereço da variável que guarda a energia do display
@@ -518,8 +520,9 @@ ciclo_reiniciar_asteroides:
     SUB     R3, 2
     MOV     [R3], R2                      ; muda o estado para OFF
 
-    CALL    reinicia_linha_asteroide
+    JMP     reinicia_linha_asteroide
 
+exit_reinicia_linha_ast:
     ADD     R1, 1                           ; acrescenta um asteróide
     CMP     R1, NUM_ASTEROIDES              ; é o último ( (?))
     JZ      main                            ; passa para a main
@@ -534,7 +537,7 @@ reinicia_linha_asteroide:
     MOV     R4, 0
     MOV     [R5], R4                        ; reseta a linha do asteroide a 0
     
-    RET
+    JMP     exit_reinicia_linha_ast
 
 main:
     YIELD
@@ -824,6 +827,9 @@ game_over_ciclo:
     MOV     R1, TECLA_START                 ; tecla para iniciar o jogo (C)
     CMP     R0, R1                          ; a tecla lida é o "C" ( (?))
     JNZ     game_over_ciclo                 ; se não, continua à espera
+
+    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona o som de fim de jogo
+    MOV     [TERMINA_SOM_OU_VIDEO], R11     ; termina o som de pausa
 
     MOV     R0, 1
     MOV     [REINICIA_JOGO], R0             ; desbloqueia o processo principal para poder reiniciar o jogo
