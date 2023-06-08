@@ -6,16 +6,7 @@
 
 ##### A fazer:
 
-- Animações da colisão
-- ~~Asteróides são apagados na colisão~~
-- ~~Sondas são apagadas na colisão~~
-- ~~Reiniciar as variáveis dos asteróides na parte de criar o asteroide e não no fim~~
-- Meter no ciclo_asteroide a verificação se o asteróide (e a sonda estão ON)
-
 ##### A corrigir:
-
-* ~~Asteroides não estão a ser bem verificados (a nível de colisões com a nave)~~
-* Ao pressionar numa tecla isso faz com que o jogo pare
 
 ---
 
