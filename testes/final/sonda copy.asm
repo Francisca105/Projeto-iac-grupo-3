@@ -1070,8 +1070,9 @@ colisao_asteroides: ; r10-ast, r9-sonda
     MOV [R3+4], R4                          ; desativa o asteróide
 
     MOV R4, [R3+2]                          ; tipo do asteróide
-    ;CMP R4, AST_BOM                         ; asteróide de tipo bom (?)
-    ;JZ colisao_asteroide_bom                ; se sim, trata do asteróide desse tipo
+    CMP R4, AST_BOM                         ; asteróide de tipo bom (?)
+    JZ colisao_asteroide_bom                ; se sim, trata do asteróide desse tipo
+    JMP colisao_asteroide_mau               ; se não, trata do asteróide de tipo mau
 
 ;colisao_asteroide_mau:
 ;    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; endereço da tabela do asteróide mau explosão
@@ -1079,13 +1080,27 @@ colisao_asteroides: ; r10-ast, r9-sonda
 ;
 ;    JMP     colisao_final
 ;
-;colisao_asteroide_bom:
-;    MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; endereço da tabela do asteróide bom explosão
-;    MOV     R11, SOM_ASTEROIDE_BOM          ; som do asteróide bom
-;
-;    MOV     R2, 25                          ; linha do asteróide
-;    CALL    altera_energia                  ; altera a energia da sonda
-;
+colisao_asteroide_bom:
+    ;MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; endereço da tabela do asteróide bom explosão
+    MOV     R11, SOM_ASTEROIDE_BOM          ; som do asteróide bom
+
+    MOV     R2, 25                          ; linha do asteróide
+    CALL    altera_energia                  ; altera a energia da sonda
+    JMP     efeito_colisao_asteroides
+
+colisao_asteroide_mau:
+    ;MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; endereço da tabela do asteróide bom explosão
+    MOV     R11, SOM_ASTEROIDE_MAU          ; som do asteróide mau
+    JMP     efeito_colisao_asteroides
+
+efeito_colisao_asteroides:
+    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; define o som a reproduzir
+    MOV     [INICIA_REPRODUCAO], R11        ; reproduz o som do efeito de colisão
+    ;CALL    desenha_objeto
+    ;MOV     R1, DEF_NAVE
+
+
+
 ;colisao_final:
 ;    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; define o som a reproduzir
 ;    MOV     [INICIA_REPRODUCAO], R11        ; reproduz o som
@@ -1093,8 +1108,6 @@ colisao_asteroides: ; r10-ast, r9-sonda
 ;    MOV     [SELECIONA_ECRA], R8            ; seleciona o ecrã do asteróide
 ;
 ;    CALL    desenha_objeto                  ; desenha o asteróide colidido
-
-
 exit_colisao:
     POP     R11
     POP     R10

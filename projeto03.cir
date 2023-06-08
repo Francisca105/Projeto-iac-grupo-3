@@ -769,7 +769,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "testes/final/sondas.asm",
+    "programFilePathName" : "testes/final/sonda copy.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1586,6 +1586,12 @@
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
       "playAsClip" : false
+    }, {
+      "filePathName" : "media/asteroide_mau.wav",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
     } ],
     "addressable data" : {
       "className" : "ModuleExtensionMemoryMediaCenter",
@@ -1750,7 +1756,11 @@
     "moduleDelay" : 5,
     "positionX" : 26,
     "positionY" : 186,
-    "simGuiVisibleInSimulation" : false,
+    "simGuiVisibleInSimulation" : true,
+    "simGuiXRelative" : 0,
+    "simGuiYRelative" : 0,
+    "simGuiWidth" : 326,
+    "simGuiHeight" : 260,
     "clockPeriod" : 3000,
     "startAutomatically" : true,
     "simulationMaster" : false,

@@ -14,7 +14,7 @@
 
 ##### A corrigir:
 
-* Asteroides não estão a ser bem verificados (a nível de colisões com a nave)
+* ~~Asteroides não estão a ser bem verificados (a nível de colisões com a nave)~~
 * Ao pressionar numa tecla isso faz com que o jogo pare
 
 ---
