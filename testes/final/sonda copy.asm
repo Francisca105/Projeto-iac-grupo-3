@@ -114,7 +114,7 @@ ALTURA_2                    EQU 2           ; altura do painel
 LARGURA_5                   EQU 5           ; largura do asteróide
 AST_MAU                     EQU 0           ; simboliza um asteróide mau
 AST_BOM                     EQU 1           ; simboliza um asteróide bom
-NUM_ASTEROIDES              EQU 1           ; número máximo de asteróides concurrentes
+NUM_ASTEROIDES              EQU 4           ; número máximo de asteróides concurrentes
 LINHA_MAX                   EQU 32          ; linha fora do ecrã
 NAO_COLISAO_NAVE            EQU 0           ; simboliza uma não colisão com a nave
 COLISAO_NAVE                EQU 1           ; simboliza uma colisão com a nave
@@ -306,19 +306,19 @@ DEF_ASTEROIDE_BOM_EXPLOSAO:                 ; definição do asteróide "bom" ao
     WORD    LARGURA_5
     WORD    ALTURA_5
     WORD    0, 0, 0, 0, 0
-    WORD    0, 0, CASTANHO, 0, 0
-    WORD    0, CASTANHO, CASTANHO, CASTANHO, 0
-    WORD    0, 0, CASTANHO, 0, 0
+    WORD    0, 0, VERDE, 0, 0
+    WORD    0, VERDE, VERDE, VERDE, 0
+    WORD    0, 0, VERDE, 0, 0
     WORD    0, 0, 0, 0, 0
 
 DEF_ASTEROIDE_MAU:                          ; definição do asteróide "mau" (não minerável)
     WORD    LARGURA_5
     WORD    ALTURA_5
-    WORD    VERMELHO, 0, VERMELHO, 0, VERMELHO
-    WORD    0, VERMELHO, VERMELHO, VERMELHO, 0
-    WORD    VERMELHO, VERMELHO, 0, VERMELHO, VERMELHO
-    WORD    0, VERMELHO, VERMELHO, VERMELHO, 0
-    WORD    VERMELHO, 0, VERMELHO, 0, VERMELHO
+    WORD    CASTANHO, 0, CASTANHO, 0, CASTANHO
+    WORD    0, CASTANHO, CASTANHO, CASTANHO, 0
+    WORD    CASTANHO, CASTANHO, 0, CASTANHO, CASTANHO
+    WORD    0, CASTANHO, CASTANHO, CASTANHO, 0
+    WORD    CASTANHO, 0, CASTANHO, 0, CASTANHO
 
 DEF_ASTEROIDE_MAU_EXPLOSAO:                 ; definição do asteróide "mau" ao colidir (não minerável)
     WORD    LARGURA_5
@@ -978,8 +978,7 @@ ciclo_testa_asteroide:
     CMP     R3, R4                          ; a coluna direita do asteróide está à esquerda da sonda (?)
     JLT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
 
-    CALL    colisao_geral
-    ; se chega aqui entao houve colisao
+    
 proximo_ciclo:
     ADD     R1, 1
     JMP     ciclo_testa_asteroide
@@ -1026,40 +1025,40 @@ colisao_geral:
 
     MOV     R6, OFF                         ; simboliza que a sonda vai ser desligada
     MOV     [R2], R6                        ; desativa a sonda
-
-    ; ASTEROIDE
-    MOV     R3, ASTEROIDES                  ; endereço da tabela dos asteróides
-    
-    MOV     R0, R1                          ; copia o número do asteróide
-    SHL     R0, 3                           ; multiplica por 8
-    ADD     R3, R0                          ; asteróide a tratar
-
-    MOV     R6, [R3]                        ; ecrã do asteróide
-    MOV     [SELECIONA_ECRA], R6            ; seleciona o ecrã
-
-    MOV     [APAGA_ECRA], R6                ; apaga o asteroide
-
-    MOV     R0, POS_AST                     ; tabela da posição dos asteróides
-    MOV     R8, R1                          ; copia o valor do número do asteroide para R8
-    SHL     R8, 2                           ; multiplica por 8
-    ADD     R0, R8                          ; posição do asteróide a tratar
-
-    MOV     R2, [R3+2]                      ; tipo do asteroide
-    CMP     R2, 1                           ; o asteróide é bom (?)
-    JZ      colisao_asteroide_bom           ; se sim, procede conforme
-
-    ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
-    
-
-    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; definição da animação da explosão do asteróide mau
+;
+;    ; ASTEROIDE
+;    MOV     R3, ASTEROIDES                  ; endereço da tabela dos asteróides
+;    
+;    MOV     R0, R1                          ; copia o número do asteróide
+;    SHL     R0, 3                           ; multiplica por 8
+;    ADD     R3, R0                          ; asteróide a tratar
+;
+;    MOV     R6, [R3]                        ; ecrã do asteróide
+;    MOV     [SELECIONA_ECRA], R6            ; seleciona o ecrã
+;
+;    MOV     [APAGA_ECRA], R6                ; apaga o asteroide
+;
+;    MOV     R0, POS_AST                     ; tabela da posição dos asteróides
+;    MOV     R8, R1                          ; copia o valor do número do asteroide para R8
+;    SHL     R8, 2                           ; multiplica por 8
+;    ADD     R0, R8                          ; posição do asteróide a tratar
+;
+;    MOV     R2, [R3+2]                      ; tipo do asteroide
+;    CMP     R2, 1                           ; o asteróide é bom (?)
+;    JZ      colisao_asteroide_bom           ; se sim, procede conforme
+;
+;    ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
+;    
+;
+;    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; definição da animação da explosão do asteróide mau
    
 exit_colisao_bom:
     ;CALL    desenha_objeto                  
     ;MOV     [DEFINE_SOM_OU_VIDEO], Rx       ; seleciona o efeito sonoro anterior
     ;MOV     [INICIA_REPRODUCAO], Rx         ; toca o efeito sonoro
     
-    MOV     R4, OFF
-    MOV     [R3+2], R4                      ; estado do asteróide
+;    MOV     R4, OFF
+;    MOV     [R3+2], R4                      ; estado do asteróide
 
 
 
@@ -1078,13 +1077,13 @@ exit_colisao_bom:
     POP     R0
     RET
 
-colisao_asteroide_bom:
+;colisao_asteroide_bom:
     ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
 
-    MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; definição da animação da explosão do asteróide mau
-    MOV     R2, 25                          ; energia a adicionar
-    CALL    altera_energia                  ; aumenta a energia
-    JMP     exit_colisao_bom
+;    MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; definição da animação da explosão do asteróide mau
+;    MOV     R2, 25                          ; energia a adicionar
+;    CALL    altera_energia                  ; aumenta a energia
+;    JMP     exit_colisao_bom
 
 
 ; ****************************************************************************
@@ -1145,6 +1144,9 @@ coloca_topo:
     PUSH    R4
     PUSH    R5
     PUSH    R6
+    PUSH    R11
+
+    MOV     R11, 0                          ; linha do asteróide
 
     MOV     R5, R0                          ; copiamos o valor do asteroide atual     
     MOV     R6, 8                           ; 8 porque cada word ocupa 2 bytes (4 words)
@@ -1191,6 +1193,7 @@ exit_coloca_bom:
     MOV     R2, [R4]                        ; coluna inicial
     MOV     R3, POS_AST                     ; posições dos asteróides
     ADD     R3, R0                          ; posição do asteróide a tratar
+    MOV     [R3], R11                       ; atualiza a posição do asteróide
     ADD     R3, 2                           ; coluna incial
     MOV     [R3], R2                        ; atualiza a coluna inicial
 
@@ -1204,6 +1207,7 @@ exit_coloca_bom:
     ADD     R0, R2                          ; posição do asteróide a tratar
     CALL    desenha_objeto                  ; desenha o asteróide
 
+    POP     R11
     POP     R6
     POP     R5
     POP     R4
@@ -1321,9 +1325,11 @@ reinicia_asteroide:
     MOV     R5, [R1]                        ; ecrã do asteróide
     MOV     [SELECIONA_ECRA], R5            ; seleciona o ecrã
     MOV     [APAGA_ECRA], R5                ; apaga o ecrã
+
     MOV     R2, OFF                         ; estado OFF
     ADD     R1, 4                           ; endereço do estado do asteróide
     MOV     [R1], R2                        ; Ao passar dos limites o asteróide é "desligado" para ser recriado no próximo ciclo
+
     MOV     R5, 0                           ; os asteróides começam na linha 0
     MOV     [R3], R5                        ; reinicia a linha do asteróide
     
@@ -1332,7 +1338,7 @@ reinicia_asteroide:
     JMP     exit_testa_limites
 
 termina_jogo_asteroide:
-    CALL    game_over_colisao               ; termina o jogo
+    ;CALL    game_over_colisao               ; termina o jogo
     MOV     R7, COLISAO_NAVE                ; indica que houve uma colisão com a nave
     JMP     exit_testa_limites
 
