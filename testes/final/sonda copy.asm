@@ -114,7 +114,7 @@ ALTURA_2                    EQU 2           ; altura do painel
 LARGURA_5                   EQU 5           ; largura do asteróide
 AST_MAU                     EQU 0           ; simboliza um asteróide mau
 AST_BOM                     EQU 1           ; simboliza um asteróide bom
-NUM_ASTEROIDES              EQU 1           ; número máximo de asteróides concurrentes
+NUM_ASTEROIDES              EQU 4           ; número máximo de asteróides concurrentes
 LINHA_MAX                   EQU 32          ; linha fora do ecrã
 NAO_COLISAO_NAVE            EQU 0           ; simboliza uma não colisão com a nave
 COLISAO_NAVE                EQU 1           ; simboliza uma colisão com a nave
@@ -1038,62 +1038,61 @@ colisao_sondas:
     MOV     R6, OFF                         ; simboliza que a sonda vai ser desligada
     MOV     [R2], R6                        ; desativa a sonda
 
-colisao_asteroide:
-    MOV     R2, ASTEROIDES                  ; endereço da tabela dos asteróides
+;colisao_asteroides: ; r10-ast, r9-sonda
+;; Entradas:  R0 - Endereço da tabela que define a posição do objeto
+;;            R1 - Endereço da tabela que define o objeto
+;    ; R0, R1, (R2) vão ser usados para guardar valores - argumentos das funções
+;
+;    MOV R10, R1                             ; copia o nº do asteróide
+;    MOV R11, R1                             ; copia o nº do asteróide
+;
+;    MOV R0, POS_AST                         ; endereço da tabela da posição dos asteróides
+;
+;    MOV R2, 4                               ; nº de words por linha da tabela da posição dos asteróides
+;    MUL R10, R2                             ; multiplica o nº do asteróide por 4
+;    ADD R0, R10                             ; endereço da posição do asteróide
+;    ; R0 check
+;
+;    MOV R3, ASTEROIDES                      ; endereço da tabela dos asteróides
+;
+;    MOV R2, 8                               ; nº de words*2 por linha da tabela da posição dos asteróides
+;    MUL R10, R2                             ; multiplica o nº do asteróide pelo anterior
+;    ADD R3, R10                             ; endereço da posição do asteróide
+;
+;    MOV R8, [R3]                            ; nº do ecrã do asteróide
+;    MOV [SELECIONA_ECRA], R8                ; seleciona o ecrã do asteróide
+;    MOV [APAGA_ECRA], R8                    ; apaga o asteróide
+;
+;    MOV R4, OFF                             ; simboliza que o asteróide vai ser desligado
+;    MOV [R3+4], R4                          ; desativa o asteróide
+;
+;    MOV R4, [R3+2]                          ; tipo do asteróide
+;    CMP R4, AST_BOM                         ; asteróide de tipo bom (?)
+;    JZ colisao_asteroide_bom                ; se sim, trata do asteróide desse tipo
+;
+;colisao_asteroide_mau:
+;    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; endereço da tabela do asteróide mau explosão
+;    MOV     R11, SOM_ASTEROIDE_MAU          ; som do asteróide mau
+;
+;    JMP     colisao_final
+;
+;colisao_asteroide_bom:
+;    MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; endereço da tabela do asteróide bom explosão
+;    MOV     R11, SOM_ASTEROIDE_BOM          ; som do asteróide bom
+;
+;    MOV     R2, 25                          ; linha do asteróide
+;    CALL    altera_energia                  ; altera a energia da sonda
+;
+;colisao_final:
+;    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; define o som a reproduzir
+;    MOV     [INICIA_REPRODUCAO], R11        ; reproduz o som
+;
+;    MOV     [SELECIONA_ECRA], R8            ; seleciona o ecrã do asteróide
+;
+;    CALL    desenha_objeto                  ; desenha o asteróide colidido
 
-    MOV     R5, R1                          ; copia o número do asteróide
-    MOV     R4, 8                           
-    MUL     R5, R4                          ; multiplica por 8
-    ADD     R2, R5                          ; asteróide a tratar
 
-    MOV     R6, [R2]                        ; ecrã do asteróide
-    MOV     [SELECIONA_ECRA], R6            ; seleciona o ecrã
-
-    MOV     [APAGA_ECRA], R6                ; apaga o asteroide
-
-    MOV     R6, OFF                         ; simboliza que o asteróide vai ser desligado
-    ADD     R2, 4                           ; endereço da variável que indica se o asteróide está ativo
-    MOV     [R2], R6                        ; desativa o asteróide
-    ADD     R2, 2                           ; endereço da variável que indica o lane do asteróide
-    MOV     [R2], R6                        ; desativa o asteróide
-
-;    MOV     R3, ASTEROIDES                  ; endereço da tabela dos asteróides
-;    
-;    MOV     R0, R1                          ; copia o número do asteróide
-;    SHL     R0, 3                           ; multiplica por 8
-;    ADD     R3, R0                          ; asteróide a tratar
-;
-;    MOV     R6, [R3]                        ; ecrã do asteróide
-;    MOV     [SELECIONA_ECRA], R6            ; seleciona o ecrã
-;
-;    MOV     [APAGA_ECRA], R6                ; apaga o asteroide
-;
-;    MOV     R0, POS_AST                     ; tabela da posição dos asteróides
-;    MOV     R8, R1                          ; copia o valor do número do asteroide para R8
-;    SHL     R8, 2                           ; multiplica por 8
-;    ADD     R0, R8                          ; posição do asteróide a tratar
-;
-;    MOV     R2, [R3+2]                      ; tipo do asteroide
-;    CMP     R2, 1                           ; o asteróide é bom (?)
-;    JZ      colisao_asteroide_bom           ; se sim, procede conforme
-;
-;    ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
-;    
-;
-;    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; definição da animação da explosão do asteróide mau
-   
-exit_colisao_bom:
-;    ;CALL    desenha_objeto                  
-;    ;MOV     [DEFINE_SOM_OU_VIDEO], Rx       ; seleciona o efeito sonoro anterior
-;    ;MOV     [INICIA_REPRODUCAO], Rx         ; toca o efeito sonoro
-;    
-;;    MOV     R4, OFF
-;;    MOV     [R3+2], R4                      ; estado do asteróide
-;
-;
-;
-;
-;
+exit_colisao:
     POP     R11
     POP     R10
     POP     R9
@@ -1106,14 +1105,6 @@ exit_colisao_bom:
     POP     R2 
     POP     R0
     RET
-
-colisao_asteroide_bom:
-;   ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
-;    MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; definição da animação da explosão do asteróide mau
-;    MOV     R2, 25                          ; energia a adicionar
-;    CALL    altera_energia                  ; aumenta a energia
-    JMP     exit_colisao_bom
-
 
 ; ****************************************************************************
 ; Processo Asteroides
@@ -1358,6 +1349,7 @@ reinicia_asteroide:
     MOV     R2, OFF                         ; estado OFF
     ADD     R1, 4                           ; endereço do estado do asteróide
     MOV     [R1], R2                        ; Ao passar dos limites o asteróide é "desligado" para ser recriado no próximo ciclo
+    MOV     [R1+2], R2                      ; A "lane" do asteróide também é reiniciada
 
     MOV     R5, 0                           ; os asteróides começam na linha 0
     MOV     [R3], R5                        ; reinicia a linha do asteróide
@@ -1583,6 +1575,9 @@ loop:                                       ; calcula em que painel está
     JMP     loop                            ; repete o ciclo
 
 desenha_painel:
+    MOV     R0, ECRA_NAVE                   ; endereço do início do ecrã da nave
+    MOV     [SELECIONA_ECRA], R0            ; seleciona o ecrã da nave
+
     MOV     R0, POS_PAINEL                  ; coordenadas do painel
     MOV     R5, PAINEIS                     ; endereço do início da tabela de painéis
     MOV     R1, [R5+R2]                     ; adiciona o offset dado pelo nº do painel atual
