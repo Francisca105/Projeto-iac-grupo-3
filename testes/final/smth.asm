@@ -956,6 +956,7 @@ testa_colisao_sonda:
     PUSH    R3
     PUSH    R4
     PUSH    R5
+    PUSH    R6
     
     MOV     R1, 0                           ; primeiro asteróide
     MOV     R2, POS_AST                     ; tabela da posição dos asteróides
@@ -977,31 +978,32 @@ ciclo_testa_asteroide:
 
     MOV     R5, R1                          ; nº do asteróide
     SHL     R5, 2                           ; valor a adicionar à tabela da posição dos asteróides (2 variáveis)
-    ADD     R2, R5                          ; tabela da posição do asteróide atual
+    ADD     R5, R2                          ; tabela da posição do asteróide atual
 
     MOV     R4, [R0]                        ; linha da sonda
-    MOV     R5, [R2]                        ; linha do asteróide
+    MOV     R6, [R5]                        ; linha do asteróide
 
-    CMP     R5, R4                          ; a linha superior do asteróide está abaixo (?)
+    CMP     R6, R4                          ; a linha superior do asteróide está abaixo (?)
     JGT     proximo_asteroide               ; se sim, passa para o próximo asteróide
 
-    ADD     R5, ALTURA_5                    ; adiciona a altura
-    CMP     R5, R4                          ; a linha inferior do asteróide está acima da sonda (?)
+    ADD     R6, ALTURA_5                    ; adiciona a altura
+    CMP     R6, R4                          ; a linha inferior do asteróide está acima da sonda (?)
     JLT     proximo_asteroide               ; se sim, passa para o próximo asteróide
     
     MOV     R4, [R0+2]                      ; coluna da sonda
-    MOV     R5, [R2+2]                      ; coluna do asteróide
+    MOV     R6, [R5+2]                      ; coluna do asteróide
 
-    CMP     R5, R4                          ; a coluna esquerda do asteróide está à direita (?)
+    CMP     R6, R4                          ; a coluna esquerda do asteróide está à direita (?)
     JGT     proximo_asteroide               ; se sim, passa para o próximo asteróide
 
-    ADD     R5, LARGURA_5                   ; adiciona a largura
-    CMP     R5, R4                          ; a coluna direita do asteróide está à esquerda da sonda (?)
+    ADD     R6, LARGURA_5                   ; adiciona a largura
+    CMP     R6, R4                          ; a coluna direita do asteróide está à esquerda da sonda (?)
     JLT     proximo_asteroide               ; se sim, passa para o próximo asteróide
 
     CALL    colisao_geral                   ; trata da colisão da sonda com o asteróide
     
 exit_testa_colisao_sonda:
+    POP     R6
     POP     R5
     POP     R4
     POP     R3
