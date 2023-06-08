@@ -52,8 +52,9 @@ CENARIO_PAUSA               EQU 4           ; número do cenário frontal de qua
 SOM_TEMA                    EQU 0           ; número da música de fundo
 SOM_START                   EQU 1           ; número do som quando se começa o jogo
 SOM_LASER                   EQU 2           ; número do som quando se dispara a sonda
-SOM_GAMEOVER                EQU 3           ; número do som quando se perde o jogo
-SOM_ASTEROIDE_DESCE         EQU 4           ; número do som quando o asteróide desce
+SOM_GAMEOVER                EQU 3           ; número do som quando se perde o jogo pelo teclado
+SOM_GAMEOVER_ENERGIA        EQU 4           ; número do som quando se perde o jogo por ficar sem energia
+SOM_GAMEOVER_COLISAO        EQU 10          ; número do som quando se perde o jogo por colisão
 SOM_TEMA_PAUSA              EQU 5           ; número da música de fundo quando se pausa o jogo
 SOM_TEMA_JOGO               EQU 6           ; número da música de fundo que toca ao longo do jogo
 SOM_PAUSA_EFFECT            EQU 7           ; número do som de efeito da pausa
@@ -366,7 +367,7 @@ TECLA_CARREGADA:                            ; última tecla carregada
     LOCK    0
 
 REINICIA_JOGO:                              ; LOCK para reiniciar o jogo
-    LOCK    0
+    WORD    0
 
 tab_int:                                    ; tabela das rotinas de interrupção
     WORD    asteroides_int
@@ -538,7 +539,9 @@ reinicia_linha_asteroide:
 main:
     YIELD
     MOV     R1, [REINICIA_JOGO]             ; espera até poder reiniciar o jogo (o valor do registo é irrelevante)
-    JMP     start                           ; reinicia o jogo
+    CMP     R1, 1
+    JZ      start                           ; reinicia o jogo
+    JMP     main
 
 
 ; **********
@@ -554,6 +557,11 @@ PROCESS SP_controlos
 
 processo_controlos:
     MOV     R0, [TECLA_CARREGADA]           ; lẽ uma tecla
+
+    MOV     R11, [PAUSA]                    ; guarda o valor do estado pausa do jogo
+    MOV     R10, ON                         ; simboliza que o jogo está pausado
+    CMP     R11, R10                        ; o jogo está pausado (?)
+    JZ      processo_controlos              ; se sim, repete o ciclo
 
     MOV     R1, TECLA_TERMINAR              ; tecla para terminar o jogo (E)
     CMP     R0, R1                          ; a tecla lida é o "E" (?)
@@ -660,6 +668,8 @@ game_over_terminado:
     MOV     R0, CENARIO_TERMINADO           ; cenário de fundo com a mensagem de fim de jogo
     MOV     [DEFINE_CENARIO], R0            ; seleciona o cenário
 
+    MOV     R11, SOM_GAMEOVER               ; endereço do som de game over
+
     CALL    game_over                       ; termina o jogo
 
     POP     R0
@@ -671,6 +681,8 @@ game_over_colisao:
     MOV     R0, CENARIO_COLISAO             ; cenário de fundo com a mensagem de fim de jogo
     MOV     [DEFINE_CENARIO], R0            ; seleciona o cenário
 
+    MOV     R11, SOM_GAMEOVER_COLISAO       ; endereço do som de game over
+
     CALL    game_over                       ; termina o jogo
 
     POP     R0
@@ -681,6 +693,8 @@ game_over_energia:
 
     MOV     R0, CENARIO_SEM_ENERGIA         ; cenário de fundo com a mensagem de sem energia
     MOV     [DEFINE_CENARIO], R0            ; seleciona o cenário
+
+    MOV     R11, SOM_GAMEOVER_ENERGIA               ; endereço do som de game over
 
     CALL    game_over                       ; game over
 
@@ -785,7 +799,7 @@ exit_cria_sonda:
 ; ****************************************************************************
 ; GAME_OVER
 ; Descrição: Termina o jogo.
-; Entradas:  ---------------
+; Entradas:  R11 - Som de game over a colocar
 ; Saídas:    ---------------
 ; ****************************************************************************
 game_over:
@@ -802,9 +816,8 @@ game_over:
 
     MOV     [APAGA_ECRAS], R0	            ; apaga todos os pixels já desenhados (o valor de R0 não é relevante)
 
-    MOV     R0, SOM_GAMEOVER                ; endereço do som de game over
-    MOV     [DEFINE_SOM_OU_VIDEO], R0       ; seleciona o som de fim de jogo
-    MOV     [INICIA_REPRODUCAO], R0         ; reproduz o som
+    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; seleciona o som de fim de jogo
+    MOV     [INICIA_REPRODUCAO], R11        ; reproduz o som
 
 game_over_ciclo:
     MOV     R0, [TECLA_CARREGADA]           ; lê uma tecla
@@ -812,6 +825,7 @@ game_over_ciclo:
     CMP     R0, R1                          ; a tecla lida é o "C" ( (?))
     JNZ     game_over_ciclo                 ; se não, continua à espera
 
+    MOV     R0, 1
     MOV     [REINICIA_JOGO], R0             ; desbloqueia o processo principal para poder reiniciar o jogo
                                             ; o valor do registo é irrelevante
     POP     R1
@@ -1057,14 +1071,15 @@ colisao_asteroides: ; r10-ast, r9-sonda
     ; R0, R1, (R2) vão ser usados para guardar valores - argumentos das funções
 
     MOV     R10, R1                         ; copia o nº do asteróide
-    MOV     R11, R1                         ; copia o nº do asteróide
+    ;MOV     R11, R1                         ; copia o nº do asteróide
 
     MOV     R3, ASTEROIDES                  ; endereço da tabela dos asteróides
 
     MOV     R2, 8                           ; nº de words*2 por linha da tabela dos asteróides
     MUL     R10, R2                         ; multiplica o nº do asteróide pelo anterior
     ADD     R3, R10                         ; endereço do asteróide a tratar
-    
+
+    MOV     R10, R1                         ; copia o nº do asteróide
     
     MOV     R0, POS_AST                     ; endereço da tabela da posição dos asteróides
     
@@ -1086,12 +1101,6 @@ colisao_asteroides: ; r10-ast, r9-sonda
     JZ colisao_asteroide_bom                ; se sim, trata do asteróide desse tipo
     JMP colisao_asteroide_mau               ; se não, trata do asteróide de tipo mau
 
-;colisao_asteroide_mau:
-;    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; endereço da tabela do asteróide mau explosão
-;    MOV     R11, SOM_ASTEROIDE_MAU          ; som do asteróide mau
-;
-;    JMP     colisao_final
-;
 colisao_asteroide_bom:
     MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; endereço da tabela do asteróide bom explosão
     MOV     R11, SOM_ASTEROIDE_BOM          ; som do asteróide bom
@@ -1109,17 +1118,7 @@ efeito_colisao_asteroides:
     MOV     [DEFINE_SOM_OU_VIDEO], R11      ; define o som a reproduzir
     MOV     [INICIA_REPRODUCAO], R11        ; reproduz o som do efeito de colisão
     CALL    desenha_objeto
-    ;MOV     R1, DEF_NAVE
 
-
-
-;colisao_final:
-;    MOV     [DEFINE_SOM_OU_VIDEO], R11      ; define o som a reproduzir
-;    MOV     [INICIA_REPRODUCAO], R11        ; reproduz o som
-;
-;    MOV     [SELECIONA_ECRA], R8            ; seleciona o ecrã do asteróide
-;
-;    CALL    desenha_objeto                  ; desenha o asteróide colidido
 exit_colisao:
     POP     R11
     POP     R10
@@ -1148,15 +1147,15 @@ processo_asteroides:
     JZ      processo_asteroides             ; se sim, volta ao começo do ciclo
 
     MOV     R0, 0                           ; primeiro asteróide
-    MOV     R7, NAO_COLISAO_NAVE            ; inicialmente não ocorreu uma colisão
 
 ciclo_asteroide:
+    MOV     R7, NAO_COLISAO_NAVE            ; inicialmente não ocorreu uma colisão
     CMP     R0, NUM_ASTEROIDES              ; chegou ao ultimo asteróide (?)
     JZ      processo_asteroides             ; se sim, repete o ciclo principal
 
     CALL    testa_limites                   ; testa se o asteróide chegou aos limites
-    ;CMP     R7, COLISAO_NAVE                ; o asteróide colidiu com a nave (?)
-    ;JZ      processo_asteroides             ; se sim, volta ao início do ciclo principal
+    CMP     R7, COLISAO_NAVE                ; o asteróide colidiu com a nave (?)
+    JZ      processo_asteroides             ; se sim, volta ao início do ciclo principal
 
     MOV     R4, R0                          ; copia o valor atual do asteróide a ser avaliado
     MOV     R11, 8                          ; 8 porque cada word ocupa 2 bytes (4 words)
@@ -1381,13 +1380,13 @@ reinicia_asteroide:
 ;    MOV     R5, 0                           ; os asteróides começam na linha 0
 ;    MOV     [R3], R5                        ; reinicia a linha do asteróide
 ;    
-;    CMP     R4, 2                           ; o asteróide colidiu com a nave (?)
-;    JLE     termina_jogo_asteroide          ; se sim, termina o jogo
+    CMP     R4, 2                           ; o asteróide colidiu com a nave (?)
+    JLE     termina_jogo_asteroide          ; se sim, termina o jogo
     JMP     exit_testa_limites
 
 termina_jogo_asteroide:
-    ;CALL    game_over_colisao               ; termina o jogo
-    ;MOV     R7, COLISAO_NAVE                ; indica que houve uma colisão com a nave
+    CALL    game_over_colisao               ; termina o jogo
+    MOV     R7, COLISAO_NAVE                ; indica que houve uma colisão com a nave
     JMP     exit_testa_limites
 
 
