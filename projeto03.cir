@@ -1,7 +1,7 @@
 {
   "comment" : "This is a JSON file describing a digital circuit, which can be loaded into the SEPE (Simulador Especial Para Ensino), a computer architecture simulator.",
-  "savedWithSimulatorVersion" : "2.2.2",
-  "savedWithSimulatorBuildOn" : "2023-05-25  at  13:01:30",
+  "savedWithSimulatorVersion" : "2.2.3",
+  "savedWithSimulatorBuildOn" : "2023-06-07  at  20:03:56",
   "editorLocked" : false,
   "startAutomatically" : true,
   "showConnectionColors" : false,
@@ -769,7 +769,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "testes/final/Asteroide.asm",
+    "programFilePathName" : "testes/final/sondas.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1581,7 +1581,7 @@
       "relative stop time" : 1.0,
       "playAsClip" : false
     }, {
-      "filePathName" : "media/start_effect.wav",
+      "filePathName" : "media/asteroide_bom.wav",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
