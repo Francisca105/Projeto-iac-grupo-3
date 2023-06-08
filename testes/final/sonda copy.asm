@@ -461,28 +461,38 @@ start:
     MOV     R1, DEF_NAVE                    ; protótipo da nave
     CALL    desenha_objeto                  ; desenha a nave
 
-reincia_sondas:
-    MOV     R9, 0                           ; primeira sonda (esquerda)
-    MOV     R1, R9                          ; cópia o nº da sonda
-    SHL     R1, 2                           ; valor a adicionar à tabela da posição das sondas
-    MOV     R0, POS_SONDAS                  ; tabela da posição das sondas
-    ADD     R0, R1                          ; posição da sonda a reiniciar
-    MOV     R6, SONDAS                      ; tabela das sondas
-    MOV     R1, R9                          ; cópia o nº da sonda
-    MOV     R2, 6                           ; 6 porque cada word são 2 bytes (3 words)
-    MUL     R1, R2                          ; valor a adicionar à tabela das sondas
-    ADD     R6, R1                          ; sonda a reiniciar na tabela das sondas
-    MOV     R8, R9                          ; copia o nº da sonda
-    SHL     R8, 1                           ; valor a adicionar à tabela da coluna inicial das sondas
+reinicia_variaveis_sonda:
+    MOV     R0, SONDAS                      ; endereço da tabela das sondas
+    MOV     R1, OFF                         ; estado OFF
 
-ciclo_reinicia_sonda:
-    CMP     R9, NUM_SONDAS                  ; chegou à última sonda (?)
-    JZ      reinicia_variaveis_asteroides   ; se sim, reinicia os asteróides  
+    MOV     [R0], R1                        ; reinicia o estado da sonda 1
+    ADD     R0, 6
+    MOV     [R0], R1                        ; reinicia o estado da sonda 2
+    ADD     R0, 6
+    MOV     [R0], R1                        ; reinicia o estado da sonda
 
-    CALL    reinicia_sonda                  ; move a sonda
-
-    ADD     R9, 1                           ; sonda seguinte
-    JMP     ciclo_reinicia_sonda            ; repete o ciclo
+;reincia_sondas:
+;    MOV     R9, 0                           ; primeira sonda (esquerda)
+;    MOV     R1, R9                          ; cópia o nº da sonda
+;    SHL     R1, 2                           ; valor a adicionar à tabela da posição das sondas
+;    MOV     R0, POS_SONDAS                  ; tabela da posição das sondas
+;    ADD     R0, R1                          ; posição da sonda a reiniciar
+;    MOV     R6, SONDAS                      ; tabela das sondas
+;    MOV     R1, R9                          ; cópia o nº da sonda
+;    MOV     R2, 6                           ; 6 porque cada word são 2 bytes (3 words)
+;    MUL     R1, R2                          ; valor a adicionar à tabela das sondas
+;    ADD     R6, R1                          ; sonda a reiniciar na tabela das sondas
+;    MOV     R8, R9                          ; copia o nº da sonda
+;    SHL     R8, 1                           ; valor a adicionar à tabela da coluna inicial das sondas
+;
+;ciclo_reinicia_sonda:
+;    CMP     R9, NUM_SONDAS                  ; chegou à última sonda (?)
+;    JZ      reinicia_variaveis_asteroides   ; se sim, reinicia os asteróides  
+;
+;    CALL    reinicia_sonda                  ; move a sonda
+;
+;    ADD     R9, 1                           ; sonda seguinte
+;    JMP     ciclo_reinicia_sonda            ; repete o ciclo
 
 reinicia_variaveis_asteroides:
     MOV     R0, ASTEROIDES
@@ -978,6 +988,7 @@ ciclo_testa_asteroide:
     CMP     R3, R4                          ; a coluna direita do asteróide está à esquerda da sonda (?)
     JLT     proximo_ciclo                   ; se sim, passa para o próximo ciclo
 
+    CALL    colisao_geral                   ; trata da colisão da sonda com o asteróide
     
 proximo_ciclo:
     ADD     R1, 1
@@ -1052,18 +1063,18 @@ colisao_geral:
 ;
 ;    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; definição da animação da explosão do asteróide mau
    
-exit_colisao_bom:
-    ;CALL    desenha_objeto                  
-    ;MOV     [DEFINE_SOM_OU_VIDEO], Rx       ; seleciona o efeito sonoro anterior
-    ;MOV     [INICIA_REPRODUCAO], Rx         ; toca o efeito sonoro
-    
-;    MOV     R4, OFF
-;    MOV     [R3+2], R4                      ; estado do asteróide
-
-
-
-
-
+;exit_colisao_bom:
+;    ;CALL    desenha_objeto                  
+;    ;MOV     [DEFINE_SOM_OU_VIDEO], Rx       ; seleciona o efeito sonoro anterior
+;    ;MOV     [INICIA_REPRODUCAO], Rx         ; toca o efeito sonoro
+;    
+;;    MOV     R4, OFF
+;;    MOV     [R3+2], R4                      ; estado do asteróide
+;
+;
+;
+;
+;
     POP     R11
     POP     R10
     POP     R9
@@ -1078,8 +1089,7 @@ exit_colisao_bom:
     RET
 
 ;colisao_asteroide_bom:
-    ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
-
+;   ;MOV     Rx, SOM_ASTEROIDE_MAU           ; endereço do som de colisao do asteroide mau
 ;    MOV     R1, DEF_ASTEROIDE_BOM_EXPLOSAO  ; definição da animação da explosão do asteróide mau
 ;    MOV     R2, 25                          ; energia a adicionar
 ;    CALL    altera_energia                  ; aumenta a energia
