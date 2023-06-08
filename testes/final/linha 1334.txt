@@ -1,4 +1,0 @@
-linha 1334
-
-termina_jogo_asteroide
-tirar o comentario
