@@ -17,7 +17,7 @@
     "width" : 1550,
     "height" : 926,
     "leftRightDividerLocation" : 237,
-    "topBottomDividerLocation" : 779
+    "topBottomDividerLocation" : 752
   },
   "connections" : [ {
     "className" : "Connection",
@@ -736,11 +736,7 @@
     "moduleDelay" : 5,
     "positionX" : 206,
     "positionY" : 90,
-    "simGuiVisibleInSimulation" : true,
-    "simGuiXRelative" : 81,
-    "simGuiYRelative" : 22,
-    "simGuiWidth" : 790,
-    "simGuiHeight" : 778,
+    "simGuiVisibleInSimulation" : false,
     "clockPeriod" : 200,
     "startAutomatically" : true,
     "simulationMaster" : true,
@@ -769,7 +765,7 @@
       "pinConnectionID" : -1,
       "pinValueFixed" : "1"
     },
-    "programFilePathName" : "testes/final/sonda copy.asm",
+    "programFilePathName" : "testes/final/game_over_sons_everything_fixed_i_guess.asm",
     "nTabSpaces" : 4,
     "bus interface" : {
       "className" : "ModuleExtensionMasterBusReadWrite",
@@ -1451,8 +1447,8 @@
     "positionX" : 782,
     "positionY" : 486,
     "simGuiVisibleInSimulation" : true,
-    "simGuiXRelative" : 890,
-    "simGuiYRelative" : 466,
+    "simGuiXRelative" : 911,
+    "simGuiYRelative" : 455,
     "simGuiWidth" : 140,
     "simGuiHeight" : 159,
     "columns" : 4,
@@ -1557,7 +1553,7 @@
       "relative stop time" : 1.0,
       "playAsClip" : false
     }, {
-      "filePathName" : "media/asteroide.wav",
+      "filePathName" : "media/gameover_energia.wav",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
@@ -1588,6 +1584,12 @@
       "playAsClip" : false
     }, {
       "filePathName" : "media/asteroide_mau.wav",
+      "relative sound volume" : 1.0,
+      "relative start time" : 0.0,
+      "relative stop time" : 1.0,
+      "playAsClip" : false
+    }, {
+      "filePathName" : "media/gameover_colisao.wav",
       "relative sound volume" : 1.0,
       "relative start time" : 0.0,
       "relative stop time" : 1.0,
@@ -1756,11 +1758,7 @@
     "moduleDelay" : 5,
     "positionX" : 26,
     "positionY" : 186,
-    "simGuiVisibleInSimulation" : true,
-    "simGuiXRelative" : 0,
-    "simGuiYRelative" : 0,
-    "simGuiWidth" : 326,
-    "simGuiHeight" : 260,
+    "simGuiVisibleInSimulation" : false,
     "clockPeriod" : 3000,
     "startAutomatically" : true,
     "simulationMaster" : false,
