@@ -7,9 +7,10 @@
 ##### A fazer:
 
 - Animações da colisão
-- Asteróides não são apagados na colisão
-- Sondas não são apagadas na colisão
-- Reiniciar as variáveis dos asteróides na parte de criar o asteroide e não no fim
+- ~~Asteróides são apagados na colisão~~
+- ~~Sondas são apagadas na colisão~~
+- ~~Reiniciar as variáveis dos asteróides na parte de criar o asteroide e não no fim~~
+- Meter no ciclo_asteroide a verificação se o asteróide (e a sonda estão ON)
 
 ##### A corrigir:
 

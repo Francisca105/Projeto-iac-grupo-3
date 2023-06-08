@@ -1041,7 +1041,7 @@ colisao_geral:
 
     MOV     R0, POS_AST                     ; tabela da posição dos asteróides
     MOV     R8, R1                          ; copia o valor do número do asteroide para R8
-    SHL     R8, 2                           ; multiplica por 8
+    SHL     R8, 2                           ; multiplica por 4
     ADD     R0, R8                          ; posição do asteróide a tratar
 
     MOV     R2, [R3+2]                      ; tipo do asteroide

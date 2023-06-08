@@ -959,6 +959,7 @@ testa_colisao_sonda:
     
     MOV     R1, 0                           ; primeiro asteróide
     MOV     R2, POS_AST                     ; tabela da posição dos asteróides
+    MOV     R3, ASTEROIDES                  ; tabela dos asteróides
 
 ciclo_testa_asteroide:
     CMP     R1, NUM_ASTEROIDES
@@ -1038,38 +1039,40 @@ colisao_sondas:
     MOV     R6, OFF                         ; simboliza que a sonda vai ser desligada
     MOV     [R2], R6                        ; desativa a sonda
 
-;colisao_asteroides: ; r10-ast, r9-sonda
-;; Entradas:  R0 - Endereço da tabela que define a posição do objeto
-;;            R1 - Endereço da tabela que define o objeto
-;    ; R0, R1, (R2) vão ser usados para guardar valores - argumentos das funções
-;
-;    MOV R10, R1                             ; copia o nº do asteróide
-;    MOV R11, R1                             ; copia o nº do asteróide
-;
-;    MOV R0, POS_AST                         ; endereço da tabela da posição dos asteróides
-;
-;    MOV R2, 4                               ; nº de words por linha da tabela da posição dos asteróides
-;    MUL R10, R2                             ; multiplica o nº do asteróide por 4
-;    ADD R0, R10                             ; endereço da posição do asteróide
-;    ; R0 check
-;
-;    MOV R3, ASTEROIDES                      ; endereço da tabela dos asteróides
-;
-;    MOV R2, 8                               ; nº de words*2 por linha da tabela da posição dos asteróides
-;    MUL R10, R2                             ; multiplica o nº do asteróide pelo anterior
-;    ADD R3, R10                             ; endereço da posição do asteróide
-;
-;    MOV R8, [R3]                            ; nº do ecrã do asteróide
-;    MOV [SELECIONA_ECRA], R8                ; seleciona o ecrã do asteróide
-;    MOV [APAGA_ECRA], R8                    ; apaga o asteróide
-;
-;    MOV R4, OFF                             ; simboliza que o asteróide vai ser desligado
-;    MOV [R3+4], R4                          ; desativa o asteróide
-;
-;    MOV R4, [R3+2]                          ; tipo do asteróide
-;    CMP R4, AST_BOM                         ; asteróide de tipo bom (?)
-;    JZ colisao_asteroide_bom                ; se sim, trata do asteróide desse tipo
-;
+colisao_asteroides: ; r10-ast, r9-sonda
+; Entradas:  R0 - Endereço da tabela que define a posição do objeto
+;            R1 - Endereço da tabela que define o objeto
+    ; R0, R1, (R2) vão ser usados para guardar valores - argumentos das funções
+
+    MOV     R10, R1                         ; copia o nº do asteróide
+    MOV     R11, R1                         ; copia o nº do asteróide
+
+    MOV     R3, ASTEROIDES                  ; endereço da tabela dos asteróides
+
+    MOV     R2, 8                           ; nº de words*2 por linha da tabela dos asteróides
+    MUL     R10, R2                         ; multiplica o nº do asteróide pelo anterior
+    ADD     R3, R10                         ; endereço do asteróide a tratar
+    
+    
+    MOV     R0, POS_AST                     ; endereço da tabela da posição dos asteróides
+    
+    MOV     R2, 4                           ; nº de words por linha da tabela da posição dos asteróides
+    MUL     R10, R2                         ; multiplica o nº do asteróide por 4
+    ADD     R0, R10                         ; endereço da posição do asteróide
+    ; R0 check
+
+
+    MOV R8, [R3]                            ; nº do ecrã do asteróide
+    MOV [SELECIONA_ECRA], R8                ; seleciona o ecrã do asteróide
+    MOV [APAGA_ECRA], R8                    ; apaga o asteróide
+
+    MOV R4, OFF                             ; simboliza que o asteróide vai ser desligado
+    MOV [R3+4], R4                          ; desativa o asteróide
+
+    MOV R4, [R3+2]                          ; tipo do asteróide
+    ;CMP R4, AST_BOM                         ; asteróide de tipo bom (?)
+    ;JZ colisao_asteroide_bom                ; se sim, trata do asteróide desse tipo
+
 ;colisao_asteroide_mau:
 ;    MOV     R1, DEF_ASTEROIDE_MAU_EXPLOSAO  ; endereço da tabela do asteróide mau explosão
 ;    MOV     R11, SOM_ASTEROIDE_MAU          ; som do asteróide mau
