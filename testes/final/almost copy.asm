@@ -1252,6 +1252,9 @@ verifica_asteroide_loop:
     CMP     R1, NUM_ASTEROIDES              ; se já verificou todos os asteroides
     JZ      exit_verifica_asteroide_bom     ; sai do ciclo
 
+    CMP     R1, R7                          ; esta a tratar o asteroide atual (?)
+    JZ      verifica_asteroide_next         ; se sim, verifica o próximo asteroide
+
     MOV     R10, R7                         ; copia o valor do contador
     SHL     R10, 3                          ; multiplica por 8 (nº de variáveis por asteroide)
     ADD     R8, R10                         ; endereço do asteroide a tratar
