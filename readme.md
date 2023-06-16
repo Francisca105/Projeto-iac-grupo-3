@@ -1,42 +1,22 @@
-# Projeto
+# Projeto IAC - Beyond Mars
 
-#### Entrega final
+O  objetivo da versão final do projeto é um jogo que corre numa máquina virtual com o PEPE-16.
 
----
 
-##### A fazer:
+### Teclado
 
-##### A corrigir:
+Abaixo estão descritas as teclas que executam ações e as respetivas funções. As teclas não apresentadas neste manual não executam nenhuma função.
 
----
+* Tecla 0– Lança a sonda para a esquerda;
+* Tecla 1– Lança a sonda para em frente;
 
-#### **Outros:**
+* Tecla 2– Lança a sonda para a direita;
+* Tecla C– Começa o jogo, com a energia da nave a 100
 
-###### **Extras**:
+* Tecla D– Suspender/continuar o jogo;
+* Tecla E– Termina o jogo.
 
-Sons:
 
-- ~~Menu inicial + start~~
-- ~~Menu pausa~~
-- ~~Continuar jogo~~
-- ~~Laser~~
-- Explosão
-- ~~Fim de jogo~~
+### [Relatório](https://github.com/Francisca105/Projeto-iac-grupo-3/blob/main/grupo03.pdf)
 
-Fundos:
-
-* ~~Durante jogo~~
-* ~~Pausa~~ ~~(tentar colocar só o texto à frente do jogo pausado)~~
-* ~~Perdeu~~
-* ~~Menu inicial~~
-
----
-
-###### **Notas sobre os labs:**
-
-* Lab 3 - funcionamento do teclado + displays
-* Lab 4 - mediacenter
-* Lab 5 - rotinas
-* Lab 6 - interrupções
-* Lab 7 - programação de aplicações de tempo real
-* Lab 8 - descodificação de endereços
+### [Enunciado](https://github.com/Francisca105/Projeto-iac-grupo-3/blob/main/projeto-beyond-Mars.pdf)
